@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepairEquipment — Documentación Frontend</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e12;
+    --surface: #14171e;
+    --surface2: #1b1f28;
+    --border: #2a2f3a;
+    --border-accent: #3b82f6;
+    --text: #e2e8f0;
+    --text-muted: #8892a4;
+    --accent: #3b82f6;
+    --accent-dim: rgba(59,130,246,.12);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,.1);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,.1);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,.1);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,.1);
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34,211,238,.1);
+    --radius: 10px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --display: 'Playfair Display', serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* --- NAV --- */
+  .topnav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(12,14,18,.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topnav-brand { font-family: var(--mono); font-weight: 700; font-size: .85rem; color: var(--accent); letter-spacing: .05em; }
+  .topnav-links { display: flex; gap: .25rem; }
+  .topnav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: .78rem;
+    font-weight: 500;
+    padding: .35rem .7rem;
+    border-radius: 6px;
+    transition: all .2s;
+  }
+  .topnav-links a:hover { color: var(--text); background: var(--surface2); }
+
+  /* --- HERO --- */
+  .hero {
+    padding: 8rem 2rem 5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% -5%, rgba(59,130,246,.1), transparent);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .15em; color: var(--accent); margin-bottom: 1.2rem;
+  }
+  .hero h1 {
+    font-family: var(--display); font-size: clamp(2rem, 4.5vw, 3.6rem);
+    font-weight: 800; line-height: 1.15; margin-bottom: 1.2rem;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p { max-width: 680px; margin: 0 auto; color: var(--text-muted); font-size: 1.05rem; }
+  .hero-badges { display: flex; justify-content: center; gap: .6rem; margin-top: 2rem; flex-wrap: wrap; }
+  .badge {
+    font-family: var(--mono); font-size: .68rem; font-weight: 500;
+    padding: .3rem .7rem; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--text-muted); background: var(--surface);
+  }
+  .badge.blue { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .badge.green { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .badge.amber { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+
+  /* --- CONTAINER --- */
+  .container { max-width: 1060px; margin: 0 auto; padding: 0 2rem; }
+
+  /* --- SECTIONS --- */
+  section { padding: 4rem 0; }
+  section + section { border-top: 1px solid var(--border); }
+  .section-label {
+    font-family: var(--mono); font-size: .68rem; text-transform: uppercase;
+    letter-spacing: .15em; color: var(--accent); margin-bottom: .6rem;
+  }
+  .section-title {
+    font-family: var(--display); font-size: 1.8rem; font-weight: 700;
+    margin-bottom: .6rem;
+  }
+  .section-desc { color: var(--text-muted); margin-bottom: 2.5rem; max-width: 720px; }
+
+  /* --- CARDS --- */
+  .card-grid { display: grid; gap: 1rem; }
+  .card-grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card-grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card-grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.5rem;
+    transition: border-color .25s;
+  }
+  .card:hover { border-color: var(--border-accent); }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 1rem; margin-bottom: .9rem; font-weight: 700;
+  }
+  .card-icon.blue  { background: var(--accent-dim); color: var(--accent); }
+  .card-icon.green { background: var(--green-dim); color: var(--green); }
+  .card-icon.amber { background: var(--amber-dim); color: var(--amber); }
+  .card-icon.red   { background: var(--red-dim); color: var(--red); }
+  .card-icon.purple{ background: var(--purple-dim); color: var(--purple); }
+  .card-icon.cyan  { background: var(--cyan-dim); color: var(--cyan); }
+  .card h3 { font-size: .95rem; font-weight: 700; margin-bottom: .35rem; }
+  .card p, .card li { font-size: .85rem; color: var(--text-muted); line-height: 1.65; }
+  .card ul { padding-left: 1.1rem; }
+  .card ul li + li { margin-top: .25rem; }
+
+  /* --- CODE --- */
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: .78rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin: 1.2rem 0;
+  }
+  code { font-family: var(--mono); font-size: .82em; }
+  .inline-code {
+    background: var(--surface2);
+    padding: .15em .45em;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: .82em;
+    color: var(--cyan);
+  }
+
+  /* --- TABLES --- */
+  .doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: .82rem;
+  }
+  .doc-table th, .doc-table td {
+    text-align: left;
+    padding: .65rem .9rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-table th {
+    font-family: var(--mono);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    background: var(--surface);
+  }
+  .doc-table td { color: var(--text); }
+  .doc-table tr:hover td { background: var(--surface); }
+  .method-get    { color: var(--green); font-weight: 700; font-family: var(--mono); font-size: .72rem; }
+  .method-post   { color: var(--amber); font-weight: 700; font-family: var(--mono); font-size: .72rem; }
+  .method-put    { color: var(--accent); font-weight: 700; font-family: var(--mono); font-size: .72rem; }
+  .method-delete { color: var(--red); font-weight: 700; font-family: var(--mono); font-size: .72rem; }
+  .method-patch  { color: var(--purple); font-weight: 700; font-family: var(--mono); font-size: .72rem; }
+
+  /* --- FLOW --- */
+  .flow-steps { display: flex; flex-direction: column; gap: .7rem; margin: 1.5rem 0; }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.3rem;
+  }
+  .flow-num {
+    min-width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent-dim); color: var(--accent);
+    display: grid; place-items: center;
+    font-family: var(--mono); font-weight: 700; font-size: .78rem;
+    flex-shrink: 0;
+  }
+  .flow-step h4 { font-size: .88rem; margin-bottom: .2rem; }
+  .flow-step p { font-size: .82rem; color: var(--text-muted); }
+
+  /* --- DIAGRAM --- */
+  .diagram-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .diagram-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(59,130,246,.04), transparent);
+    pointer-events: none;
+  }
+  .arch-row { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin: .8rem 0; position: relative; z-index: 1; }
+  .arch-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .7rem 1.3rem;
+    min-width: 140px;
+    font-size: .8rem;
+    font-weight: 600;
+  }
+  .arch-block.accent { border-color: var(--accent); color: var(--accent); }
+  .arch-block.green  { border-color: var(--green); color: var(--green); }
+  .arch-block.amber  { border-color: var(--amber); color: var(--amber); }
+  .arch-block small { display: block; font-weight: 400; font-size: .7rem; color: var(--text-muted); margin-top: .15rem; }
+  .arch-arrow { text-align: center; color: var(--text-muted); font-size: .9rem; margin: .3rem 0; position: relative; z-index: 1; }
+
+  /* --- TOC --- */
+  .toc { margin: 2rem 0; }
+  .toc a {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: .85rem;
+    padding: .35rem 0 .35rem 1rem;
+    border-left: 2px solid var(--border);
+    transition: all .2s;
+  }
+  .toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* --- FOOTER --- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: .78rem;
+  }
+
+  /* --- UTILITY --- */
+  .mt-1 { margin-top: .5rem; }
+  .mt-2 { margin-top: 1rem; }
+  .mt-3 { margin-top: 1.5rem; }
+  .mb-2 { margin-bottom: 1rem; }
+  .text-muted { color: var(--text-muted); }
+  .text-accent { color: var(--accent); }
+  .text-green { color: var(--green); }
+  .text-amber { color: var(--amber); }
+  .highlight-box {
+    background: var(--accent-dim);
+    border: 1px solid rgba(59,130,246,.25);
+    border-radius: var(--radius);
+    padding: 1rem 1.3rem;
+    font-size: .85rem;
+    margin: 1.2rem 0;
+  }
+  .highlight-box strong { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .topnav-links { display: none; }
+    .hero { padding: 6rem 1.2rem 3rem; }
+    .container { padding: 0 1.2rem; }
+    .arch-row { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav class="topnav">
+  <span class="topnav-brand">RE::DOCS</span>
+  <div class="topnav-links">
+    <a href="#arquitectura">Arquitectura</a>
+    <a href="#tech">Tech Stack</a>
+    <a href="#frontend">Frontend</a>
+    <a href="#componentes">Componentes</a>
+    <a href="#rutas-api">API</a>
+    <a href="#bd">Base de Datos</a>
+    <a href="#flujo">Flujo</a>
+    <a href="#docs">Documentación</a>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <p class="hero-eyebrow">Documentación de Desarrollo Frontend</p>
+  <h1>RepairEquipment</h1>
+  <p>Plataforma integral de gestión para un taller de reparación de equipos electrónicos. Este documento describe paso a paso cómo se desarrolló el frontend, su interacción con el backend y la base de datos, y las decisiones de diseño del proyecto.</p>
+  <div class="hero-badges">
+    <span class="badge blue">React 19</span>
+    <span class="badge blue">Vite 7</span>
+    <span class="badge green">Express 5</span>
+    <span class="badge green">Node.js</span>
+    <span class="badge amber">MySQL 8</span>
+    <span class="badge">JWT Auth</span>
+    <span class="badge">RBAC 4 Roles</span>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ================= TOC ================= -->
+<section>
+  <p class="section-label">Contenido</p>
+  <h2 class="section-title">Tabla de Contenidos</h2>
+  <div class="toc">
+    <a href="#arquitectura">1. Arquitectura General del Proyecto</a>
+    <a href="#tech">2. Stack Tecnológico</a>
+    <a href="#frontend">3. Estructura del Frontend</a>
+    <a href="#componentes">4. Componentes y Vistas por Rol</a>
+    <a href="#auth-flow">5. Flujo de Autenticación</a>
+    <a href="#api-comm">6. Comunicación Frontend ↔ Backend</a>
+    <a href="#rutas-api">7. Referencia Completa de Rutas API</a>
+    <a href="#bd">8. Base de Datos — Esquema y Relaciones</a>
+    <a href="#flujo">9. Flujo de Negocio Completo</a>
+    <a href="#dashboards">10. Dashboards por Rol — Detalle</a>
+    <a href="#forms-modals">11. Formularios y Modales</a>
+    <a href="#filtros">12. Sistema de Filtros y Búsqueda</a>
+    <a href="#pagos">13. Módulo de Pagos y Facturación</a>
+    <a href="#docs">14. Documentación del Proyecto</a>
+    <a href="#instalacion">15. Instalación y Ejecución</a>
+  </div>
+</section>
+
+<!-- ================= 1. ARQUITECTURA ================= -->
+<section id="arquitectura">
+  <p class="section-label">Sección 01</p>
+  <h2 class="section-title">Arquitectura General del Proyecto</h2>
+  <p class="section-desc">El proyecto utiliza una arquitectura de tres capas separadas: frontend SPA, backend REST API y base de datos relacional MySQL. Cada capa opera de forma independiente y se comunica a través de HTTP/JSON.</p>
+
+  <div class="diagram-box">
+    <div class="arch-row">
+      <div class="arch-block accent">
+        Frontend (React + Vite)
+        <small>:5173 — SPA con dashboards por rol</small>
+      </div>
+    </div>
+    <div class="arch-arrow">↕ fetch() + JSON + JWT Bearer Token</div>
+    <div class="arch-row">
+      <div class="arch-block green">
+        Backend (Express 5 REST API)
+        <small>:3001 — Controllers + Routes + Middleware</small>
+      </div>
+    </div>
+    <div class="arch-arrow">↕ mysql2/promise — Pool de conexiones</div>
+    <div class="arch-row">
+      <div class="arch-block amber">
+        Base de Datos (MySQL 8 — TallerBD)
+        <small>:3306 — 13 tablas, relaciones FK, InnoDB</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>Separación clara:</strong> El frontend no tiene acceso directo a la BD. Toda operación de datos pasa por la API REST, que valida autenticación (JWT) y autorización (roles) antes de ejecutar cualquier consulta SQL.
+  </div>
+
+  <h3 class="mt-3 mb-2">Estructura de Directorios</h3>
+  <pre>ProyectoReparacionEquipos/
+├── backend/
+│   ├── scripts/                # seedAdmin.js, seedDemo.js
+│   └── src/
+│       ├── controllers/        # Lógica de negocio por módulo (8 controllers)
+│       ├── middleware/          # auth.js → JWT verify + role guards
+│       ├── routes/             # Endpoints REST por dominio (8 routers)
+│       ├── utils/              # http.js, text.js
+│       ├── app.js              # Express app + montaje de rutas
+│       ├── db.js               # Pool MySQL con mysql2/promise
+│       └── server.js           # Arranque del servidor
+├── frontend/
+│   └── src/
+│       ├── admin/
+│       │   ├── views/
+│       │   │   ├── AdminDashboard.jsx    ← Componente raíz autenticado
+│       │   │   └── sections/             ← 9 secciones del admin
+│       │   └── components/
+│       │       └── AdminFormsAndModals.jsx ← 18 forms/modales reutilizables
+│       ├── auth/views/LoginView.jsx       ← Login + registro cliente
+│       ├── cliente/views/ClienteDashboard.jsx
+│       ├── recepcion/views/RecepcionDashboard.jsx
+│       └── tecnico/views/TecnicoDashboard.jsx
+└── docs/
+    ├── schema.sql              # Esquema base de la BD
+    ├── migrations/             # 4 migraciones incrementales
+    ├── Database.md             # Documentación del modelo ER
+    ├── HistoriaUsuario.md      # 6 historias de usuario
+    ├── DiagramaClases.puml     # Diagrama UML PlantUML
+    └── Estructura.md           # Notas de estructura</pre>
+</section>
+
+<!-- ================= 2. TECH STACK ================= -->
+<section id="tech">
+  <p class="section-label">Sección 02</p>
+  <h2 class="section-title">Stack Tecnológico</h2>
+  <p class="section-desc">Tecnologías y dependencias utilizadas en el proyecto.</p>
+
+  <div class="card-grid cols-3">
+    <div class="card">
+      <div class="card-icon blue">F</div>
+      <h3>Frontend</h3>
+      <ul>
+        <li><strong>React 19.2</strong> — Librería UI con hooks</li>
+        <li><strong>Vite 7</strong> — Bundler + dev server con HMR</li>
+        <li><strong>CSS puro</strong> — 1193 líneas en App.css</li>
+        <li>Sin dependencias de UI externas (Tailwind, MUI, etc.)</li>
+        <li>ESLint para linting del código</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon green">B</div>
+      <h3>Backend</h3>
+      <ul>
+        <li><strong>Express 5</strong> — Framework HTTP</li>
+        <li><strong>mysql2 3.16</strong> — Driver MySQL con Promises</li>
+        <li><strong>jsonwebtoken 9</strong> — Generación/verificación JWT</li>
+        <li><strong>bcryptjs 3</strong> — Hash de contraseñas</li>
+        <li><strong>cors</strong> — Permitir peticiones cross-origin</li>
+        <li><strong>dotenv</strong> — Variables de entorno</li>
+        <li><strong>nodemon</strong> — Hot reload en desarrollo</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon amber">D</div>
+      <h3>Base de Datos</h3>
+      <ul>
+        <li><strong>MySQL 8</strong> — Motor InnoDB</li>
+        <li><strong>13 tablas</strong> — con relaciones FK</li>
+        <li><strong>utf8mb4</strong> — Soporte completo Unicode</li>
+        <li>Compatible con XAMPP</li>
+        <li>Migraciones incrementales SQL</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 3. ESTRUCTURA FRONTEND ================= -->
+<section id="frontend">
+  <p class="section-label">Sección 03</p>
+  <h2 class="section-title">Estructura del Frontend — Paso a Paso</h2>
+  <p class="section-desc">Cómo se diseñó y construyó el frontend desde el punto de entrada hasta las vistas finales.</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <span class="flow-num">1</span>
+      <div>
+        <h4>Punto de entrada: <code class="inline-code">main.jsx</code></h4>
+        <p>React se inicializa con <code class="inline-code">createRoot</code> montando el componente <code class="inline-code">&lt;App /&gt;</code> dentro de <code class="inline-code">StrictMode</code> en el <code class="inline-code">div#root</code> del <code class="inline-code">index.html</code>. Se importa <code class="inline-code">index.css</code> para estilos globales base.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">2</span>
+      <div>
+        <h4>Componente raíz: <code class="inline-code">App.jsx</code></h4>
+        <p>El App.jsx es mínimo: solo renderiza <code class="inline-code">&lt;AdminDashboard /&gt;</code>. Este componente actúa como <strong>orquestador global</strong> de toda la aplicación, manejando autenticación, estado global y enrutamiento por rol.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">3</span>
+      <div>
+        <h4>Decisión de vista por autenticación</h4>
+        <p>El <code class="inline-code">AdminDashboard</code> verifica si existe <code class="inline-code">token</code> en <code class="inline-code">localStorage</code>. Si NO hay token → renderiza <code class="inline-code">&lt;LoginView /&gt;</code>. Si hay token → verifica el rol del usuario y renderiza el dashboard correspondiente.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">4</span>
+      <div>
+        <h4>Enrutamiento basado en rol (sin React Router)</h4>
+        <p>El proyecto <strong>no usa React Router</strong>. En lugar de eso, el <code class="inline-code">AdminDashboard</code> lee <code class="inline-code">user.rol</code> del estado y con condicionales renderiza el dashboard que corresponde:</p>
+        <p class="mt-1"><code class="inline-code">Técnico</code> → <code class="inline-code">&lt;TecnicoDashboard /&gt;</code> · <code class="inline-code">Recepción</code> → <code class="inline-code">&lt;RecepcionDashboard /&gt;</code> · <code class="inline-code">Cliente</code> → <code class="inline-code">&lt;ClienteDashboard /&gt;</code> · <code class="inline-code">Administrador</code> → Panel admin con sidebar + secciones</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">5</span>
+      <div>
+        <h4>Navegación interna con estado <code class="inline-code">view</code></h4>
+        <p>Dentro de cada dashboard, una variable de estado <code class="inline-code">const [view, setView] = useState('overview')</code> controla qué sección se muestra. El sidebar tiene botones <code class="inline-code">&lt;button onClick={() => setView('ordenes')}&gt;</code> que cambian la vista renderizada condicionalmente.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">6</span>
+      <div>
+        <h4>Carga de datos al autenticarse</h4>
+        <p>Un <code class="inline-code">useEffect</code> ligado al <code class="inline-code">token</code> dispara la carga masiva de datos con <code class="inline-code">Promise.all()</code>: órdenes, clientes, equipos, técnicos, grupos, estados, tipos. Los datos extra (reglas, pagos, usuarios, roles) se cargan solo si el rol es Administrador o Recepción.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">7</span>
+      <div>
+        <h4>Estado centralizado con <code class="inline-code">useState</code> en AdminDashboard</h4>
+        <p>Todo el estado de la aplicación (arrays de datos, filtros, modales abiertos, errores) se gestiona en AdminDashboard y se pasa vía <strong>props</strong> a las secciones y dashboards hijos. Esto convierte a AdminDashboard en un <em>state container</em> sin necesidad de Context API ni Redux.</p>
+      </div>
+    </div>
+  </div>
+
+  <pre>// Flujo de renderizado simplificado:
+main.jsx
+  └─ App.jsx
+      └─ AdminDashboard.jsx
+          ├── [sin token] → LoginView.jsx (login + registro cliente)
+          ├── [Técnico]   → TecnicoDashboard.jsx
+          ├── [Recepción] → RecepcionDashboard.jsx
+          ├── [Cliente]   → ClienteDashboard.jsx
+          └── [Admin]     → Sidebar + Sections:
+              ├── OverviewSection.jsx
+              ├── OrdenesSection.jsx
+              ├── ClientesSection.jsx
+              ├── EquiposSection.jsx
+              ├── TecnicosSection.jsx
+              ├── GruposSection.jsx
+              ├── ReglasSection.jsx      (solo Admin)
+              ├── PagosSection.jsx       (solo Admin)
+              └── UsuariosSection.jsx    (solo Admin)</pre>
+</section>
+
+<!-- ================= 4. COMPONENTES POR ROL ================= -->
+<section id="componentes">
+  <p class="section-label">Sección 04</p>
+  <h2 class="section-title">Componentes y Vistas por Rol</h2>
+  <p class="section-desc">Cada rol del sistema tiene un dashboard dedicado con funcionalidades específicas.</p>
+
+  <div class="card-grid cols-2">
+    <div class="card">
+      <div class="card-icon blue">ADM</div>
+      <h3>Administrador — AdminDashboard</h3>
+      <p>Acceso completo al sistema con sidebar de 9 secciones:</p>
+      <ul class="mt-1">
+        <li><strong>Overview:</strong> KPIs globales (totales, sin técnico, sin grupo, con saldo) + distribución por estado</li>
+        <li><strong>Órdenes:</strong> CRUD completo + filtros avanzados (estado, técnico, grupo, pendientes) + cambio rápido de estado y técnico inline</li>
+        <li><strong>Clientes:</strong> CRUD + búsqueda por nombre/documento/email</li>
+        <li><strong>Equipos:</strong> CRUD + asociación a cliente y tipo</li>
+        <li><strong>Técnicos:</strong> CRUD + toggle activo/inactivo</li>
+        <li><strong>Grupos:</strong> CRUD + asignar/remover técnicos de grupos + ver miembros</li>
+        <li><strong>Reglas:</strong> Reglas de asignación por palabras clave con prioridad</li>
+        <li><strong>Pagos:</strong> Historial filtrable con KPIs (total, hoy, promedio, cantidad) + exportar CSV</li>
+        <li><strong>Usuarios:</strong> Gestión de cuentas, roles, reset de password</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon green">TEC</div>
+      <h3>Técnico — TecnicoDashboard</h3>
+      <p>Vista enfocada en la carga de trabajo técnico:</p>
+      <ul class="mt-1">
+        <li><strong>KPIs:</strong> Total asignadas, pendientes, en reparación, con diagnóstico</li>
+        <li><strong>Mis órdenes:</strong> Órdenes asignadas al técnico actual (match por email o nombre)</li>
+        <li><strong>Todas las órdenes:</strong> Vista lectura de todo el taller</li>
+        <li><strong>Cambio rápido de estado:</strong> Select inline para actualizar estado</li>
+        <li><strong>Modal de trabajo:</strong> Actualizar diagnóstico, observaciones y estado</li>
+        <li>Filtros por estado y búsqueda textual</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon amber">REC</div>
+      <h3>Recepción — RecepcionDashboard</h3>
+      <p>Punto de atención y registro:</p>
+      <ul class="mt-1">
+        <li><strong>Overview:</strong> Contadores de órdenes, clientes, equipos + distribución por estado</li>
+        <li><strong>Órdenes:</strong> Crear órdenes + editar + cambiar estado/técnico + cobrar pagos</li>
+        <li><strong>Clientes:</strong> Registrar y editar clientes</li>
+        <li><strong>Equipos:</strong> Registrar y editar equipos con tipo y cliente</li>
+        <li><strong>Pagos:</strong> Historial + descarga de factura por orden</li>
+        <li>Reutiliza formularios/modales del admin (AdminFormsAndModals)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon purple">CLI</div>
+      <h3>Cliente — ClienteDashboard</h3>
+      <p>Portal de autoservicio para el cliente:</p>
+      <ul class="mt-1">
+        <li><strong>KPIs:</strong> Total órdenes, pendientes, listas, saldo total</li>
+        <li><strong>Mi perfil:</strong> Editar teléfono, dirección, ciudad</li>
+        <li><strong>Mis órdenes:</strong> Tabla con filtros por estado y búsqueda</li>
+        <li><strong>Detalle de orden:</strong> Modal con equipo, diagnóstico, historial, pagos</li>
+        <li><strong>Pago en línea:</strong> Simulación de tarjeta (validación de campos) + transferencia/efectivo/PSE</li>
+        <li><strong>Factura:</strong> Descarga de factura cuando el pago está completo</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 5. AUTH FLOW ================= -->
+<section id="auth-flow">
+  <p class="section-label">Sección 05</p>
+  <h2 class="section-title">Flujo de Autenticación</h2>
+  <p class="section-desc">El sistema usa JWT (JSON Web Tokens) para autenticación sin estado. El frontend almacena el token y datos del usuario en localStorage.</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <span class="flow-num">1</span>
+      <div>
+        <h4>Login — POST <code class="inline-code">/api/auth/login</code></h4>
+        <p>El frontend envía <code class="inline-code">{ email, password }</code>. El backend verifica credenciales con bcryptjs y retorna <code class="inline-code">{ token, user: { id, nombre, apellido, email, rol } }</code>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">2</span>
+      <div>
+        <h4>Almacenamiento del Token</h4>
+        <p>El frontend guarda <code class="inline-code">token</code> y <code class="inline-code">user</code> (JSON serializado) en <code class="inline-code">localStorage</code>. Al recargar la página, <code class="inline-code">useState</code> recupera estos valores con funciones inicializadoras:</p>
+        <pre class="mt-1">const [token, setToken] = useState(() => localStorage.getItem('token') || '')
+const [user, setUser] = useState(() => {
+  const raw = localStorage.getItem('user')
+  return raw ? JSON.parse(raw) : null
+})</pre>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">3</span>
+      <div>
+        <h4>Envío del Token en cada Petición</h4>
+        <p>Cada llamada a la API incluye el header <code class="inline-code">Authorization: Bearer {token}</code>. Las funciones helper <code class="inline-code">apiGet</code>, <code class="inline-code">apiPost</code>, <code class="inline-code">apiPut</code>, <code class="inline-code">apiDelete</code> centralizan esta lógica.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">4</span>
+      <div>
+        <h4>Verificación en el Backend (Middleware)</h4>
+        <p>El middleware <code class="inline-code">authRequired</code> extrae el token del header, lo verifica con <code class="inline-code">jwt.verify()</code> y adjunta <code class="inline-code">req.user</code> (payload del JWT) al request. Si falla → 401. Luego <code class="inline-code">requireRole('Administrador')</code> o <code class="inline-code">requireAnyRole([...])</code> verifican permisos → 403 si no coincide.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">5</span>
+      <div>
+        <h4>Registro de Cliente — POST <code class="inline-code">/api/auth/register-cliente</code></h4>
+        <p>Desde el LoginView, el formulario de registro envía nombre, apellido, documento, teléfono, email, dirección, ciudad y password. El backend crea simultáneamente un registro en <code class="inline-code">clientes</code> y otro en <code class="inline-code">usuarios</code> con rol "Cliente".</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">6</span>
+      <div>
+        <h4>Logout</h4>
+        <p>El frontend limpia <code class="inline-code">localStorage</code> y resetea los estados <code class="inline-code">token</code> y <code class="inline-code">user</code> a vacío/null. Esto provoca que el componente vuelva a renderizar el LoginView.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 6. COMUNICACIÓN FRONTEND ↔ BACKEND ================= -->
+<section id="api-comm">
+  <p class="section-label">Sección 06</p>
+  <h2 class="section-title">Comunicación Frontend ↔ Backend</h2>
+  <p class="section-desc">El frontend se comunica con el backend exclusivamente mediante la API Fetch nativa del navegador. No se usa Axios ni librerías HTTP externas.</p>
+
+  <h3 class="mb-2">Funciones Helper Centralizadas</h3>
+  <p>Dentro de <code class="inline-code">AdminDashboard.jsx</code> se definen 4 funciones que encapsulan las operaciones HTTP con token JWT:</p>
+
+  <pre>// GET con autenticación
+const apiGet = async (path) => {
+  const res = await fetch(`http://localhost:3001${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error('Error al cargar datos')
+  return res.json()
+}
+
+// POST con autenticación + body JSON
+const apiPost = async (path, payload) => {
+  const res = await fetch(`http://localhost:3001${path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error || 'Error al guardar')
+  return data
+}
+
+// PUT y DELETE siguen el mismo patrón...</pre>
+
+  <h3 class="mt-3 mb-2">Patrón de Actualización: Operación + Refresh</h3>
+  <p>Después de cada operación de escritura (crear, editar, eliminar), el frontend refresca los datos correspondientes desde la API:</p>
+  <pre>const createOrden = async (payload) => {
+  await apiPost('/api/ordenes', payload)   // 1. Enviar al backend
+  await refreshOrdenes()                    // 2. Recargar la lista
+}
+
+// refreshOrdenes() simplemente hace:
+const refreshOrdenes = async () => setOrdenes(await apiGet('/api/ordenes'))</pre>
+
+  <div class="highlight-box">
+    <strong>Ciclo de vida de un dato:</strong> Frontend (estado React) → fetch POST/PUT/DELETE → Backend (controller valida + ejecuta SQL) → Response JSON → Frontend dispara GET de refresh → setState actualiza la UI.
+  </div>
+
+  <h3 class="mt-3 mb-2">Carga Inicial Masiva con Promise.all</h3>
+  <p>Al autenticarse, un <code class="inline-code">useEffect</code> carga todos los datos necesarios en paralelo:</p>
+  <pre>useEffect(() => {
+  if (!token) return
+  const load = async () => {
+    const basePromises = [
+      apiGet('/api/ordenes'),     apiGet('/api/clientes'),
+      apiGet('/api/equipos'),     apiGet('/api/tecnicos'),
+      apiGet('/api/grupos'),      apiGet('/api/estados'),
+      apiGet('/api/tipos-equipo'),
+    ]
+    // Extras solo para Admin o Recepción:
+    const extraPromises = isAdmin
+      ? [apiGet('/api/reglas-asignacion'), apiGet('/api/pagos'),
+         apiGet('/api/usuarios'), apiGet('/api/usuarios/roles')]
+      : isRecepcion
+        ? [Promise.resolve([]), apiGet('/api/pagos'), ...]
+        : [Promise.resolve([]), ...]
+
+    const results = await Promise.all([...basePromises, ...extraPromises])
+    // Desestructurar y setear cada estado...
+  }
+  load()
+}, [token, user?.rol])</pre>
+</section>
+
+<!-- ================= 7. RUTAS API ================= -->
+<section id="rutas-api">
+  <p class="section-label">Sección 07</p>
+  <h2 class="section-title">Referencia Completa de Rutas API</h2>
+  <p class="section-desc">Todos los endpoints REST expuestos por el backend en <code class="inline-code">http://localhost:3001/api</code>. Los roles indicados son los que tienen acceso a cada ruta.</p>
+
+  <h3 class="mb-2">Autenticación</h3>
+  <table class="doc-table">
+    <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Roles</th></tr>
+    <tr><td><span class="method-post">POST</span></td><td><code class="inline-code">/auth/login</code></td><td>Iniciar sesión → retorna JWT + user</td><td>Público</td></tr>
+    <tr><td><span class="method-post">POST</span></td><td><code class="inline-code">/auth/register-cliente</code></td><td>Crear cuenta de cliente</td><td>Público</td></tr>
+  </table>
+
+  <h3 class="mt-3 mb-2">Catálogos</h3>
+  <table class="doc-table">
+    <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Roles</th></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/estados</code></td><td>Lista estados de orden</td><td>Autenticado</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/tipos-equipo</code></td><td>Lista tipos de equipo</td><td>Autenticado</td></tr>
+  </table>
+
+  <h3 class="mt-3 mb-2">Órdenes de Servicio</h3>
+  <table class="doc-table">
+    <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Roles</th></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/ordenes</code></td><td>Listar todas las órdenes</td><td>Admin, Técnico, Recepción</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/ordenes/:id</code></td><td>Detalle de orden + historial</td><td>Admin, Técnico, Recepción</td></tr>
+    <tr><td><span class="method-post">POST</span></td><td><code class="inline-code">/ordenes</code></td><td>Crear nueva orden</td><td>Admin, Técnico, Recepción</td></tr>
+    <tr><td><span class="method-put">PUT</span></td><td><code class="inline-code">/ordenes/:id</code></td><td>Actualizar orden completa</td><td>Admin, Técnico, Recepción</td></tr>
+    <tr><td><span class="method-patch">PATCH</span></td><td><code class="inline-code">/ordenes/:id/estado</code></td><td>Cambiar solo el estado</td><td>Admin, Técnico, Recepción</td></tr>
+    <tr><td><span class="method-delete">DELETE</span></td><td><code class="inline-code">/ordenes/:id</code></td><td>Eliminar orden (sin pagos)</td><td>Admin</td></tr>
+    <tr><td><span class="method-post">POST</span></td><td><code class="inline-code">/ordenes/:id/asignar</code></td><td>Asignar técnico/grupo manual</td><td>Admin</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/ordenes/:id/sugerencias</code></td><td>Sugerencias por palabras clave</td><td>Admin</td></tr>
+    <tr><td><span class="method-post">POST</span></td><td><code class="inline-code">/ordenes/:id/asignar-sugerido</code></td><td>Asignar técnico/grupo sugerido</td><td>Admin</td></tr>
+  </table>
+
+  <h3 class="mt-3 mb-2">Portal Cliente</h3>
+  <table class="doc-table">
+    <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Roles</th></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/mis-ordenes</code></td><td>Órdenes del cliente autenticado</td><td>Cliente</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/mis-ordenes/:id</code></td><td>Detalle de orden propia</td><td>Cliente</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/mis-ordenes/:id/factura</code></td><td>Descargar factura propia</td><td>Cliente</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/clientes/me</code></td><td>Datos del perfil propio</td><td>Cliente</td></tr>
+    <tr><td><span class="method-put">PUT</span></td><td><code class="inline-code">/clientes/me</code></td><td>Actualizar perfil propio</td><td>Cliente</td></tr>
+  </table>
+
+  <h3 class="mt-3 mb-2">Pagos y Facturas</h3>
+  <table class="doc-table">
+    <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Roles</th></tr>
+    <tr><td><span class="method-post">POST</span></td><td><code class="inline-code">/ordenes/:id/pagos</code></td><td>Registrar pago</td><td>Autenticado</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/ordenes/:id/pagos</code></td><td>Pagos de una orden</td><td>Autenticado</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/pagos</code></td><td>Todos los pagos</td><td>Admin, Recepción</td></tr>
+    <tr><td><span class="method-get">GET</span></td><td><code class="inline-code">/ordenes/:id/factura</code></td><td>Descargar factura (staff)</td><td>Admin, Recepción</td></tr>
+  </table>
+
+  <h3 class="mt-3 mb-2">Clientes, Equipos, Técnicos, Grupos, Reglas, Usuarios</h3>
+  <table class="doc-table">
+    <tr><th>Recurso</th><th>GET list</th><th>GET :id</th><th>POST</th><th>PUT :id</th><th>DELETE :id</th></tr>
+    <tr><td>Clientes</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>Admin</td></tr>
+    <tr><td>Equipos</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>Admin</td></tr>
+    <tr><td>Técnicos</td><td>✅</td><td>—</td><td>✅</td><td>✅</td><td>Admin</td></tr>
+    <tr><td>Grupos</td><td>✅</td><td>técnicos</td><td>Admin</td><td>Admin</td><td>Admin</td></tr>
+    <tr><td>Reglas</td><td>Admin</td><td>—</td><td>Admin</td><td>Admin</td><td>Admin</td></tr>
+    <tr><td>Usuarios</td><td>Admin</td><td>—</td><td>Admin</td><td>Admin</td><td>Admin</td></tr>
+  </table>
+</section>
+
+<!-- ================= 8. BASE DE DATOS ================= -->
+<section id="bd">
+  <p class="section-label">Sección 08</p>
+  <h2 class="section-title">Base de Datos — Esquema y Relaciones</h2>
+  <p class="section-desc">MySQL 8 con 13 tablas InnoDB, integridad referencial completa con foreign keys, y migraciones incrementales.</p>
+
+  <div class="card-grid cols-3">
+    <div class="card">
+      <div class="card-icon amber">R</div>
+      <h3>roles</h3>
+      <p>4 roles: Administrador, Cliente, Tecnico, Recepcion. Referenciado por <code class="inline-code">usuarios.rol_id</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon blue">U</div>
+      <h3>usuarios</h3>
+      <p>Cuentas de login. FK a <code class="inline-code">roles</code> y opcionalmente a <code class="inline-code">clientes</code>. Almacena password_hash (bcrypt).</p>
+    </div>
+    <div class="card">
+      <div class="card-icon green">C</div>
+      <h3>clientes</h3>
+      <p>Propietarios de equipos. Datos personales + documento único. Referenciado por equipos, órdenes, pagos.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon cyan">T</div>
+      <h3>tecnicos</h3>
+      <p>Personal técnico con especialidad y estado activo/inactivo. Relacionado con grupos vía <code class="inline-code">tecnico_grupos</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon purple">G</div>
+      <h3>grupos_responsables</h3>
+      <p>Áreas o equipos de trabajo. Relación N:M con técnicos. Referenciado por órdenes y reglas.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon red">TG</div>
+      <h3>tecnico_grupos</h3>
+      <p>Tabla pivote N:M entre técnicos y grupos. PK compuesta (tecnico_id, grupo_id).</p>
+    </div>
+    <div class="card">
+      <div class="card-icon amber">RA</div>
+      <h3>reglas_asignacion</h3>
+      <p>Palabras clave separadas por coma → asociadas a un grupo y opcionalmente un técnico, con prioridad.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon blue">TE</div>
+      <h3>tipos_equipo</h3>
+      <p>Catálogo: PC, Laptop, Impresora, Monitor, Tablet, Celular.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon green">E</div>
+      <h3>equipos</h3>
+      <p>Equipos de clientes con marca, modelo, serie (única), tipo y accesorios.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon cyan">EO</div>
+      <h3>estados_orden</h3>
+      <p>Catálogo: Recibido → En Diagnóstico → En Reparación → Listo → Entregado.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon purple">OS</div>
+      <h3>ordenes_servicio</h3>
+      <p>Tabla central. FK a cliente, equipo, técnico, grupo, estado. Campos de costo, saldo, pagado, garantía, falla, diagnóstico.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon red">OH</div>
+      <h3>ordenes_historial</h3>
+      <p>Log de cambios de estado por orden. Registra estado, comentario, usuario y fecha.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon amber">P</div>
+      <h3>pagos</h3>
+      <p>Pagos asociados a órdenes. Método, valor, referencia, cliente y usuario que registró.</p>
+    </div>
+  </div>
+
+  <h3 class="mt-3 mb-2">Relaciones Clave (ER)</h3>
+  <pre>roles          ──1:N──▶ usuarios
+clientes       ──1:N──▶ usuarios (opcional, solo rol Cliente)
+clientes       ──1:N──▶ equipos
+clientes       ──1:N──▶ ordenes_servicio
+clientes       ──1:N──▶ pagos
+tipos_equipo   ──1:N──▶ equipos
+equipos        ──1:N──▶ ordenes_servicio
+tecnicos       ──1:N──▶ ordenes_servicio
+tecnicos       ──N:M──▶ grupos_responsables  (vía tecnico_grupos)
+tecnicos       ──1:N──▶ reglas_asignacion
+grupos         ──1:N──▶ ordenes_servicio
+grupos         ──1:N──▶ reglas_asignacion
+estados_orden  ──1:N──▶ ordenes_servicio
+estados_orden  ──1:N──▶ ordenes_historial
+ordenes        ──1:N──▶ ordenes_historial
+ordenes        ──1:N──▶ pagos
+usuarios       ──1:N──▶ ordenes_historial
+usuarios       ──1:N──▶ pagos</pre>
+</section>
+
+<!-- ================= 9. FLUJO DE NEGOCIO ================= -->
+<section id="flujo">
+  <p class="section-label">Sección 09</p>
+  <h2 class="section-title">Flujo de Negocio Completo</h2>
+  <p class="section-desc">El ciclo de vida de una orden de servicio desde la recepción hasta la entrega y facturación.</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <span class="flow-num">1</span>
+      <div>
+        <h4>Recepción registra cliente y equipo</h4>
+        <p>Desde RecepcionDashboard o AdminDashboard, se crea el cliente (si es nuevo) y luego su equipo con marca, modelo, serie y tipo. El frontend envía <code class="inline-code">POST /api/clientes</code> y <code class="inline-code">POST /api/equipos</code>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">2</span>
+      <div>
+        <h4>Crear orden de servicio</h4>
+        <p>Se crea la orden con código (ej: OS-0001), cliente, equipo, falla reportada y costo estimado. El backend registra estado "Recibido" y crea entrada en <code class="inline-code">ordenes_historial</code>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">3</span>
+      <div>
+        <h4>Admin asigna técnico y grupo</h4>
+        <p>Manualmente o usando sugerencias por palabras clave (reglas de asignación). El frontend permite cambio inline de técnico/grupo desde la tabla de órdenes, o mediante el modal de edición completo.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">4</span>
+      <div>
+        <h4>Técnico actualiza diagnóstico y estado</h4>
+        <p>El técnico ve la orden en su dashboard, abre el modal de trabajo y registra diagnóstico, observaciones. Cambia estado: En Diagnóstico → En Reparación → Listo. Cada cambio crea registro en historial.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">5</span>
+      <div>
+        <h4>Orden llega a estado "Listo"</h4>
+        <p>Se habilita el pago. Tanto el portal del cliente como recepción pueden registrar pagos. El <code class="inline-code">costo_final</code> define el saldo pendiente.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">6</span>
+      <div>
+        <h4>Registro de pago</h4>
+        <p>Cliente: paga desde su portal con tarjeta (simulada), transferencia, PSE o efectivo. Recepción: registra pago en mostrador. El backend actualiza <code class="inline-code">saldo</code> y marca <code class="inline-code">pagado = 1</code> cuando saldo llega a 0.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">7</span>
+      <div>
+        <h4>Generación y descarga de factura</h4>
+        <p>Con la orden pagada, se habilita descarga de factura (PDF/HTML generado por el backend). Accesible desde el portal del cliente y desde recepción.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 10. DASHBOARDS DETALLE ================= -->
+<section id="dashboards">
+  <p class="section-label">Sección 10</p>
+  <h2 class="section-title">Dashboards por Rol — Detalle Técnico</h2>
+
+  <div class="card-grid cols-2">
+    <div class="card">
+      <h3>AdminDashboard — State Container</h3>
+      <p>Es el corazón de la aplicación. Gestiona <strong>+30 variables de estado</strong> con <code class="inline-code">useState</code>: datos de todas las entidades, filtros, modales abiertos, errores, loading. Define las funciones CRUD que se pasan como props a las secciones hijas.</p>
+      <p class="mt-1">También calcula datos derivados con <code class="inline-code">useMemo</code>: conteos por estado, filtros combinados de órdenes/clientes/equipos/pagos, estadísticas de pagos.</p>
+    </div>
+    <div class="card">
+      <h3>TecnicoDashboard — Match Inteligente</h3>
+      <p>El técnico no tiene un <code class="inline-code">tecnico_id</code> directo en su JWT. El dashboard hace <strong>match inteligente</strong>: busca en la lista de técnicos aquel cuyo email o nombre+apellido coincida con el usuario logueado. Luego filtra <code class="inline-code">ordenes</code> por ese tecnico_id.</p>
+    </div>
+    <div class="card">
+      <h3>ClienteDashboard — Autónomo</h3>
+      <p>A diferencia de los otros dashboards, el ClienteDashboard <strong>gestiona su propio estado</strong>. No recibe datos del AdminDashboard padre; tiene sus propias funciones <code class="inline-code">apiGet</code>, <code class="inline-code">apiPost</code>, <code class="inline-code">apiPut</code> internas y consume endpoints exclusivos: <code class="inline-code">/mis-ordenes</code>, <code class="inline-code">/clientes/me</code>.</p>
+    </div>
+    <div class="card">
+      <h3>RecepcionDashboard — Reutilización</h3>
+      <p>Recibe todos los datos y funciones CRUD desde AdminDashboard vía props. Reutiliza componentes de <code class="inline-code">AdminFormsAndModals</code> (OrdenCreateForm, ClienteForm, EquipoForm, modales de edición). Añade su propio <code class="inline-code">RecepcionPagoModal</code> para cobros en mostrador.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 11. FORMS Y MODALS ================= -->
+<section id="forms-modals">
+  <p class="section-label">Sección 11</p>
+  <h2 class="section-title">Formularios y Modales</h2>
+  <p class="section-desc">El archivo <code class="inline-code">AdminFormsAndModals.jsx</code> exporta 18 componentes reutilizables que se usan en los dashboards de Admin y Recepción.</p>
+
+  <div class="card-grid cols-3">
+    <div class="card">
+      <h3>Formularios Inline</h3>
+      <ul>
+        <li>GrupoForm</li>
+        <li>TecnicoForm</li>
+        <li>ClienteForm</li>
+        <li>EquipoForm</li>
+        <li>ReglaForm</li>
+        <li>UsuarioForm</li>
+        <li>OrdenCreateForm</li>
+        <li>GrupoAssignForm</li>
+      </ul>
+      <p class="mt-1">Se renderizan directamente dentro de la sección. Cada uno maneja su estado local y llama <code class="inline-code">onCreate</code> (prop) al enviar.</p>
+    </div>
+    <div class="card">
+      <h3>Modales de Edición</h3>
+      <ul>
+        <li>OrdenModal</li>
+        <li>ClienteModal</li>
+        <li>EquipoModal</li>
+        <li>TecnicoModal</li>
+        <li>GrupoModal</li>
+        <li>ReglaModal</li>
+        <li>UsuarioModal</li>
+        <li>UsuarioPasswordModal</li>
+      </ul>
+      <p class="mt-1">Se abren al hacer click en "Editar". Overlay con <code class="inline-code">modal-backdrop</code> + formulario precargado con datos actuales.</p>
+    </div>
+    <div class="card">
+      <h3>Modales de Detalle</h3>
+      <ul>
+        <li>OrdenDetalleModal</li>
+        <li>GrupoTecnicosModal</li>
+        <li>ClienteDetalleModal (en ClienteDashboard)</li>
+        <li>PagoModal (en ClienteDashboard)</li>
+        <li>TecnicoOrdenModal (en TecnicoDashboard)</li>
+        <li>RecepcionPagoModal</li>
+      </ul>
+      <p class="mt-1">Consultan datos adicionales al abrirse (ej: historial, pagos) y presentan información de solo lectura o acciones específicas.</p>
+    </div>
+  </div>
+
+  <div class="highlight-box mt-2">
+    <strong>Patrón modal:</strong> El estado <code class="inline-code">editOrden</code> (null o objeto) controla la visibilidad. Cuando no es null, se renderiza el modal. Al cerrar: <code class="inline-code">setEditOrden(null)</code>. Al guardar: <code class="inline-code">apiPut</code> → refresh → <code class="inline-code">setEditOrden(null)</code>.
+  </div>
+</section>
+
+<!-- ================= 12. FILTROS ================= -->
+<section id="filtros">
+  <p class="section-label">Sección 12</p>
+  <h2 class="section-title">Sistema de Filtros y Búsqueda</h2>
+  <p class="section-desc">Cada sección implementa filtrado en el cliente usando <code class="inline-code">useMemo</code> para recalcular listas filtradas reactivamente.</p>
+
+  <div class="card-grid cols-2">
+    <div class="card">
+      <h3>Filtros de Órdenes (Admin)</h3>
+      <ul>
+        <li><strong>Búsqueda textual:</strong> código, nombre cliente, marca, modelo, serie</li>
+        <li><strong>Estado:</strong> select con todos los estados</li>
+        <li><strong>Técnico:</strong> select con todos los técnicos</li>
+        <li><strong>Grupo:</strong> select con todos los grupos</li>
+        <li><strong>Solo pendientes:</strong> checkbox que oculta "Entregado"</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Filtros de Pagos (Admin)</h3>
+      <ul>
+        <li><strong>Búsqueda:</strong> orden, cliente, referencia</li>
+        <li><strong>Método de pago:</strong> dinámico según métodos existentes</li>
+        <li><strong>Rango de fechas:</strong> desde/hasta con inputs tipo date</li>
+        <li><strong>Exportar CSV:</strong> genera archivo descargable con datos filtrados</li>
+        <li><strong>KPIs reactivos:</strong> total, total hoy, promedio ticket, cantidad — se recalculan según filtros</li>
+      </ul>
+    </div>
+  </div>
+
+  <pre>// Ejemplo: filtrado de órdenes con useMemo
+const filteredOrdenes = useMemo(() => {
+  const q = ordenSearch.trim().toLowerCase()
+  return ordenes.filter((o) => {
+    if (ordenEstado && String(o.estado_id) !== String(ordenEstado)) return false
+    if (ordenTecnico && String(o.tecnico_id) !== String(ordenTecnico)) return false
+    if (ordenGrupo && String(o.grupo_id) !== String(ordenGrupo)) return false
+    if (ordenSoloPendientes && o.estado_nombre === 'Entregado') return false
+    if (!q) return true
+    return String(o.codigo).toLowerCase().includes(q) ||
+           String(o.cliente_nombre).toLowerCase().includes(q) || ...
+  })
+}, [ordenes, ordenSearch, ordenEstado, ordenTecnico, ordenGrupo, ordenSoloPendientes])</pre>
+</section>
+
+<!-- ================= 13. PAGOS ================= -->
+<section id="pagos">
+  <p class="section-label">Sección 13</p>
+  <h2 class="section-title">Módulo de Pagos y Facturación</h2>
+  <p class="section-desc">El sistema soporta pagos desde dos puntos: el portal del cliente y la recepción del taller.</p>
+
+  <div class="card-grid cols-2">
+    <div class="card">
+      <h3>Pago desde Portal Cliente</h3>
+      <p>El <code class="inline-code">PagoModal</code> ofrece métodos: Transferencia, Tarjeta, Efectivo, PSE. Para tarjeta, incluye validación simulada (número 12-19 dígitos, titular, MM/AA, CVV). La referencia se genera automáticamente con los últimos 4 dígitos.</p>
+      <p class="mt-1">Se habilita cuando estado = "Listo" y <code class="inline-code">pagado = false</code>. No permite valores superiores al saldo pendiente.</p>
+    </div>
+    <div class="card">
+      <h3>Pago desde Recepción</h3>
+      <p>El <code class="inline-code">RecepcionPagoModal</code> es más simple: método (Efectivo/Tarjeta/Transferencia), valor y referencia opcional. Se muestra el botón "Cobrar" en órdenes con estado Listo/Entregado que tengan saldo pendiente.</p>
+      <p class="mt-1">Recepción también puede descargar facturas desde el historial de pagos para cualquier orden.</p>
+    </div>
+  </div>
+
+  <div class="highlight-box mt-2">
+    <strong>Flujo del pago en el backend:</strong> El controller <code class="inline-code">createPago</code> inserta en la tabla <code class="inline-code">pagos</code>, luego recalcula el saldo de la orden sumando todos los pagos existentes y actualizando <code class="inline-code">ordenes_servicio.saldo</code> y <code class="inline-code">ordenes_servicio.pagado</code>.
+  </div>
+</section>
+
+<!-- ================= 14. DOCUMENTACIÓN ================= -->
+<section id="docs">
+  <p class="section-label">Sección 14</p>
+  <h2 class="section-title">Documentación del Proyecto</h2>
+  <p class="section-desc">El proyecto incluye documentación técnica y funcional en la carpeta <code class="inline-code">docs/</code>.</p>
+
+  <div class="card-grid cols-2">
+    <div class="card">
+      <div class="card-icon blue">DB</div>
+      <h3>Database.md</h3>
+      <p>Documentación completa del modelo ER en formato Mermaid. Describe cada tabla, su propósito y todas las relaciones con claves foráneas. Incluye notas sobre restricciones de eliminación.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon green">HU</div>
+      <h3>HistoriaUsuario.md</h3>
+      <p>6 historias de usuario formales con criterios de aceptación: HU-01 Registro cliente/equipo/orden, HU-02 Ciclo técnico, HU-03 Grupos y reglas, HU-04 Usuarios y seguridad, HU-05 Pagos en punto de atención, HU-06 Portal cliente.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon amber">SQL</div>
+      <h3>schema.sql + migrations/</h3>
+      <p>Esquema base con 13 tablas + datos semilla (roles, estados, tipos). 4 migraciones incrementales para grupos, pagos de cliente y reglas de asignación.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon purple">UML</div>
+      <h3>DiagramaClases.puml + Database.puml</h3>
+      <p>Diagramas PlantUML del modelo de clases y del esquema de base de datos para visualización técnica profesional.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon cyan">ST</div>
+      <h3>Estructura.md</h3>
+      <p>Documento con el árbol de directorios del proyecto y notas sobre la organización modular del código.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon red">MK</div>
+      <h3>MockupsLineaEnfasis.pdf</h3>
+      <p>Mockups visuales de la línea de énfasis del proyecto con diseños de las interfaces planeadas.</p>
+    </div>
+  </div>
+
+  <h3 class="mt-3 mb-2">Historias de Usuario — Resumen</h3>
+  <table class="doc-table">
+    <tr><th>ID</th><th>Título</th><th>Actor</th><th>Descripción</th></tr>
+    <tr><td>HU-01</td><td>Registrar cliente, equipo y orden</td><td>Recepción / Admin</td><td>Iniciar flujo de reparación con trazabilidad desde recepción</td></tr>
+    <tr><td>HU-02</td><td>Gestionar ciclo técnico</td><td>Técnico</td><td>Actualizar estado, diagnóstico y observaciones de órdenes asignadas</td></tr>
+    <tr><td>HU-03</td><td>Grupos y reglas de asignación</td><td>Admin</td><td>Crear grupos, asignar técnicos, definir reglas por palabras clave</td></tr>
+    <tr><td>HU-04</td><td>Gestión de usuarios y seguridad</td><td>Admin</td><td>CRUD usuarios, roles, reset password, sincronización con clientes/técnicos</td></tr>
+    <tr><td>HU-05</td><td>Registro de pago en punto de atención</td><td>Recepción / Admin</td><td>Registrar pagos en mostrador para cerrar saldo de órdenes</td></tr>
+    <tr><td>HU-06</td><td>Portal cliente: consulta y pago</td><td>Cliente</td><td>Ver estado de órdenes, pagar en línea, descargar factura</td></tr>
+  </table>
+</section>
+
+<!-- ================= 15. INSTALACIÓN ================= -->
+<section id="instalacion">
+  <p class="section-label">Sección 15</p>
+  <h2 class="section-title">Instalación y Ejecución</h2>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <span class="flow-num">1</span>
+      <div>
+        <h4>Crear base de datos MySQL</h4>
+        <pre class="mt-1">mysql -u root -p &lt; docs/schema.sql
+mysql -u root -p TallerBD &lt; docs/migrations/2026-02-07_add_client_pagos.sql
+mysql -u root -p TallerBD &lt; docs/migrations/2026-02-07_add_grupos.sql
+mysql -u root -p TallerBD &lt; docs/migrations/2026-02-07_add_reglas_asignacion.sql
+mysql -u root -p TallerBD &lt; docs/migrations/2026-02-07_update_reglas_asignacion_palabras.sql</pre>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">2</span>
+      <div>
+        <h4>Configurar variables de entorno</h4>
+        <p>Crear archivo <code class="inline-code">backend/.env</code>:</p>
+        <pre class="mt-1">PORT=3001
+DB_HOST=127.0.0.1
+DB_USER=root
+DB_PASS=
+DB_NAME=TallerBD
+DB_PORT=3306
+JWT_SECRET=change_me_please
+ADMIN_EMAIL=admin@taller.local
+ADMIN_PASSWORD=Admin1234
+ADMIN_NOMBRE=Admin
+ADMIN_APELLIDO=Principal</pre>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">3</span>
+      <div>
+        <h4>Instalar dependencias e iniciar</h4>
+        <pre class="mt-1"># Backend
+cd backend && npm install
+npm run seed:admin      # Crear usuario administrador
+npm run seed:demo       # Datos de demostración
+npm run dev             # Inicia en :3001
+
+# Frontend
+cd frontend && npm install
+npm run dev             # Inicia en :5173</pre>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">4</span>
+      <div>
+        <h4>Acceso al sistema</h4>
+        <p>Abrir <code class="inline-code">http://localhost:5173</code>. Credenciales de demo:</p>
+        <p class="mt-1">Admin: <code class="inline-code">admin@taller.local</code> / <code class="inline-code">Admin1234</code><br>
+        Cliente demo: <code class="inline-code">carlos@mail.com</code> / <code class="inline-code">Cliente1234</code></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <p>RepairEquipment v0.1 · Documentación de desarrollo frontend · Proyecto académico de Ingeniería de Sistemas</p>
+  <p class="mt-1" style="color: var(--accent);">React 19 + Vite 7 · Express 5 + MySQL 8 · JWT + RBAC</p>
+</footer>
+
+</body>
+</html>

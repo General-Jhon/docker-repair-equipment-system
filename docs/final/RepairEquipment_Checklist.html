@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepairEquipment — Checklist de Evaluación</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--surface3:#222d42;
+  --border:#2a3550;--border2:#364163;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --accent:#3b82f6;--accent2:#60a5fa;--accent-glow:rgba(59,130,246,.15);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.1);--green-border:rgba(34,197,94,.25);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,.1);
+  --red:#ef4444;--purple:#a855f7;--cyan:#06b6d4;--pink:#ec4899;
+  --radius:10px;--radius-lg:16px;
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--border) var(--bg)}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+
+/* Grain overlay */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size:128px 128px;opacity:.5}
+
+/* Sidebar */
+.sidebar{position:fixed;left:0;top:0;width:280px;height:100vh;background:var(--surface);
+  border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;
+  transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sidebar-header{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-header h2{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--text);margin-bottom:2px}
+.sidebar-header .tag{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);background:var(--accent-glow);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:6px}
+
+.nav-list{flex:1;overflow-y:auto;padding:12px 10px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);
+  cursor:pointer;transition:all .2s;font-size:13px;font-weight:500;color:var(--text2);
+  text-decoration:none;margin-bottom:2px;position:relative}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-glow);color:var(--accent2);font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-num{font-family:var(--mono);font-size:11px;font-weight:700;width:24px;height:24px;
+  border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:var(--surface3);color:var(--text3);transition:all .2s}
+.nav-item.active .nav-num,.nav-item:hover .nav-num{background:var(--accent);color:#fff}
+.nav-item .check{margin-left:auto;font-size:14px;opacity:0;transition:opacity .2s}
+.nav-item.done .check{opacity:1;color:var(--green)}
+
+.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);text-align:center}
+.progress-bar{height:4px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:2px;
+  transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+/* Main */
+.main{margin-left:280px;min-height:100vh}
+.hero{padding:60px 48px 40px;background:linear-gradient(135deg,var(--surface) 0%,rgba(59,130,246,.06) 100%);
+  border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-80px;top:-80px;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);pointer-events:none}
+.hero h1{font-size:32px;font-weight:900;letter-spacing:-.03em;line-height:1.15;margin-bottom:6px}
+.hero h1 span{background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:14px;color:var(--text2);max-width:600px}
+.hero-badges{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.hero-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+
+.content{padding:32px 48px 80px}
+
+/* Sections */
+.section{margin-bottom:48px;animation:fadeUp .5s ease both;scroll-margin-top:24px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.section-num{font-family:var(--mono);font-size:13px;font-weight:700;width:36px;height:36px;
+  border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.section-title{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.section-status{margin-left:auto;font-size:11px;font-weight:600;padding:4px 12px;border-radius:6px;
+  display:flex;align-items:center;gap:5px}
+.status-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.status-partial{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+
+.section-body{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden}
+
+/* Cards inside sections */
+.card-grid{display:grid;gap:1px;background:var(--border)}
+.card-grid.cols-2{grid-template-columns:1fr 1fr}
+.card-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+.card{background:var(--surface);padding:20px;transition:background .2s}
+.card:hover{background:var(--surface2)}
+.card-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:6px}
+.card-value{font-size:15px;font-weight:600;color:var(--text)}
+.card-desc{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5}
+
+/* Code blocks */
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin:12px 0;overflow-x:auto}
+.code-block code{font-family:var(--mono);font-size:12px;color:var(--text2);line-height:1.7}
+.code-block .kw{color:var(--purple)}
+.code-block .fn{color:var(--accent2)}
+.code-block .str{color:var(--green)}
+.code-block .cm{color:var(--text3);font-style:italic}
+
+/* Info rows */
+.info-row{display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);
+  transition:background .15s}
+.info-row:last-child{border-bottom:none}
+.info-row:hover{background:var(--surface2)}
+.info-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0}
+.info-content{flex:1;min-width:0}
+.info-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.info-desc{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* Tags */
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;letter-spacing:.02em}
+.tag-blue{background:rgba(59,130,246,.12);color:var(--accent2);border:1px solid rgba(59,130,246,.2)}
+.tag-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.tag-purple{background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.2)}
+.tag-amber{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.tag-cyan{background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2)}
+.tag-pink{background:rgba(236,72,153,.1);color:var(--pink);border:1px solid rgba(236,72,153,.2)}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--surface3);padding:10px 14px;text-align:left;font-weight:600;font-size:11px;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl tr:hover td{background:var(--surface2)}
+.tbl .mono{font-family:var(--mono);font-size:11px;color:var(--accent2)}
+.tbl .method{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+.m-get{background:rgba(34,197,94,.12);color:var(--green)}
+.m-post{background:rgba(59,130,246,.12);color:var(--accent2)}
+.m-put{background:rgba(245,158,11,.12);color:var(--amber)}
+.m-patch{background:rgba(168,85,247,.12);color:var(--purple)}
+.m-del{background:rgba(239,68,68,.12);color:var(--red)}
+
+/* Tree */
+.tree{font-family:var(--mono);font-size:12px;color:var(--text2);line-height:1.8;padding:16px 20px}
+.tree .dir{color:var(--accent2);font-weight:600}
+.tree .file{color:var(--text2)}
+.tree .hl{color:var(--amber);font-weight:600}
+
+/* Mobile */
+.menu-toggle{display:none;position:fixed;top:16px;left:16px;z-index:200;width:40px;height:40px;
+  border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;
+  align-items:center;justify-content:center;font-size:18px;color:var(--text)}
+@media(max-width:800px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hero,.content{padding-left:24px;padding-right:24px}
+  .hero{padding-top:70px}
+  .menu-toggle{display:flex}
+  .card-grid.cols-2,.card-grid.cols-3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2>🔧 RepairEquipment</h2>
+    <div>
+      <span class="tag">Evaluación Final</span>
+    </div>
+  </div>
+  <nav class="nav-list" id="navList"></nav>
+  <div class="sidebar-footer">
+    <div id="progressText">0 / 7 puntos revisados</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="hero">
+    <h1>Checklist de <span>Evaluación</span></h1>
+    <p>Consolidado técnico de los 7 puntos evaluables del proyecto RepairEquipment — navegación punto a punto.</p>
+    <div class="hero-badges">
+      <span class="hero-badge">React 19 + Vite</span>
+      <span class="hero-badge">Express 5</span>
+      <span class="hero-badge">MySQL 8</span>
+      <span class="hero-badge">JWT RBAC</span>
+      <span class="hero-badge">13 tablas</span>
+      <span class="hero-badge">~45 endpoints</span>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    id: "manual-tecnico",
+    num: "01",
+    title: "Manual Técnico",
+    color: "#3b82f6",
+    status: "ok",
+    content: `
+      <div class="card-grid cols-3">
+        <div class="card">
+          <div class="card-label">Stack Frontend</div>
+          <div class="card-value">React 19 + Vite</div>
+          <div class="card-desc">JSX funcional, Hooks (useState, useEffect, useMemo), Fetch API nativo, CSS modular en App.css. Sin React Router — navegación por estado.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Stack Backend</div>
+          <div class="card-value">Express 5 + Node.js</div>
+          <div class="card-desc">ES Modules (import/export), CORS habilitado, JSON body parser, 9 archivos de rutas, 9 controladores, middleware JWT.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Base de Datos</div>
+          <div class="card-value">MySQL 8 — TallerBD</div>
+          <div class="card-desc">13 tablas con FK, UK, InnoDB utf8mb4. Pool de conexiones con mysql2/promise. Migraciones SQL versionadas.</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(59,130,246,.12);color:#60a5fa">📋</div>
+        <div class="info-content">
+          <div class="info-title">Arquitectura de 3 capas</div>
+          <div class="info-desc">Route → Middleware (auth) → Controller → DB (pool.query). Separación clara entre capa de presentación (React), lógica de negocio (controllers), y persistencia (MySQL).</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(34,197,94,.12);color:#22c55e">🔐</div>
+        <div class="info-content">
+          <div class="info-title">Seguridad</div>
+          <div class="info-desc">JWT con expiración 8h, bcryptjs para hashing de passwords, 3 funciones middleware (authRequired, requireRole, requireAnyRole), 4 roles RBAC: Administrador, Recepción, Técnico, Cliente.</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(168,85,247,.12);color:#a855f7">⚙️</div>
+        <div class="info-content">
+          <div class="info-title">Features avanzadas</div>
+          <div class="info-desc">Motor de reglas de asignación por palabras clave, generación de factura PDF sin librerías externas, sistema de pagos parciales con recálculo de saldo, sincronización automática usuario↔cliente↔técnico.</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: "documentacion-repo",
+    num: "02",
+    title: "Documentación en Repositorios",
+    color: "#22c55e",
+    status: "ok",
+    content: `
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(59,130,246,.12);color:#60a5fa">📖</div>
+        <div class="info-content">
+          <div class="info-title">README.md — Raíz del proyecto</div>
+          <div class="info-desc">Documento principal con descripción del proyecto, instrucciones de instalación, configuración de variables de entorno, y stack tecnológico.</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(34,197,94,.12);color:#22c55e">🗃️</div>
+        <div class="info-content">
+          <div class="info-title">docs/schema.sql — Esquema completo de BD</div>
+          <div class="info-desc">Script SQL completo con CREATE DATABASE, CREATE TABLE para las 13 tablas, constraints (FK, UK, NOT NULL), e inserciones iniciales para roles, estados y tipos de equipo.</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(245,158,11,.12);color:#f59e0b">📐</div>
+        <div class="info-content">
+          <div class="info-title">docs/Database.puml + Database.md</div>
+          <div class="info-desc">Diagrama UML de la base de datos en formato PlantUML y documentación Markdown del modelo relacional.</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(168,85,247,.12);color:#a855f7">📊</div>
+        <div class="info-content">
+          <div class="info-title">docs/DiagramaClases.puml</div>
+          <div class="info-desc">Diagrama de clases UML del sistema backend en formato PlantUML.</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(6,182,212,.12);color:#06b6d4">📝</div>
+        <div class="info-content">
+          <div class="info-title">docs/HistoriaUsuario.md</div>
+          <div class="info-desc">Historias de usuario documentadas para los requerimientos funcionales del sistema.</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(236,72,153,.12);color:#ec4899">🏗️</div>
+        <div class="info-content">
+          <div class="info-title">docs/Estructura.md + docs/migrations/</div>
+          <div class="info-desc">Documento de estructura del proyecto y carpeta de migraciones SQL versionadas (add_reglas_asignacion, add_grupos, add_client_pagos, update_reglas).</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px">
+        <div class="card-label" style="margin-bottom:10px">Árbol de documentación</div>
+        <div class="tree">
+<span class="dir">docs/</span>
+├── <span class="hl">schema.sql</span>              ← Esquema completo BD (13 tablas)
+├── <span class="file">Database.puml</span>          ← UML Base de Datos
+├── <span class="file">Database.md</span>            ← Documentación modelo relacional
+├── <span class="file">DiagramaClases.puml</span>    ← UML Diagrama de Clases
+├── <span class="file">HistoriaUsuario.md</span>     ← Historias de Usuario
+├── <span class="file">Estructura.md</span>          ← Estructura del proyecto
+├── <span class="file">MockupsLineaEnfasis.pdf</span>← Mockups de interfaz
+├── <span class="file">MockupsLineaEnfasis.epgz</span>
+└── <span class="dir">migrations/</span>
+    ├── <span class="file">2026-02-07_add_reglas_asignacion.sql</span>
+    ├── <span class="file">2026-02-07_update_reglas_asignacion_palabras.sql</span>
+    ├── <span class="file">2026-02-07_add_client_pagos.sql</span>
+    └── <span class="file">2026-02-07_add_grupos.sql</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: "tablero-seguimiento",
+    num: "03",
+    title: "Tablero de Seguimiento de Actividades",
+    color: "#f59e0b",
+    status: "ok",
+    content: `
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(245,158,11,.12);color:#f59e0b">📌</div>
+        <div class="info-content">
+          <div class="info-title">Metodología de seguimiento</div>
+          <div class="info-desc">El tablero de actividades se gestiona a través de la plataforma de seguimiento del proyecto (GitHub Projects / Trello) con las historias de usuario documentadas en docs/HistoriaUsuario.md como base para las tarjetas de trabajo.</div>
+          <div class="tag-row">
+            <span class="tag tag-amber">Kanban</span>
+            <span class="tag tag-blue">Sprints</span>
+            <span class="tag tag-green">User Stories</span>
+          </div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(59,130,246,.12);color:#60a5fa">📊</div>
+        <div class="info-content">
+          <div class="info-title">Módulos del sistema completados</div>
+          <div class="info-desc">Cada módulo corresponde a épicas en el tablero de seguimiento, con tareas granulares asignadas.</div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Módulo</th><th>Alcance</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>Autenticación</td><td>Login, registro cliente, JWT, middleware RBAC</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Clientes</td><td>CRUD + perfil propio + sync usuario</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Equipos</td><td>CRUD + JOIN clientes + tipos equipo</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Órdenes</td><td>CRUD + estados + historial + asignación + sugerencias</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Técnicos</td><td>CRUD + especialidad + estado activo</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Grupos</td><td>CRUD + relación N:M tecnico_grupos</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Reglas</td><td>CRUD reglas asignación por palabras clave</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Pagos</td><td>Registro, saldo, factura PDF</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Usuarios</td><td>CRUD + roles + safeguards admin + sync</td><td><span class="tag tag-green">Completo</span></td></tr>
+          <tr><td>Vistas Frontend</td><td>4 dashboards + login + 9 admin sections</td><td><span class="tag tag-green">Completo</span></td></tr>
+        </tbody>
+      </table>
+    `
+  },
+  {
+    id: "solid-patrones",
+    num: "04",
+    title: "Buenas Prácticas: SOLID y Patrones de Diseño",
+    color: "#a855f7",
+    status: "ok",
+    content: `
+      <div class="card-grid cols-2">
+        <div class="card">
+          <div class="card-label">S — Single Responsibility</div>
+          <div class="card-value">1 archivo = 1 responsabilidad</div>
+          <div class="card-desc">Cada controller maneja UNA entidad (clientes.controller.js, ordenes.controller.js). Cada archivo de rutas define SOLO las rutas de su módulo. El middleware auth.js solo maneja autenticación.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">O — Open/Closed</div>
+          <div class="card-value">Extensible sin modificar</div>
+          <div class="card-desc">El motor de reglas es extensible: se agregan nuevas reglas en BD sin modificar código. Los estados de orden se leen de la tabla estados_orden. Los tipos de equipo se gestionan como catálogo.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">L — Liskov Substitution</div>
+          <div class="card-value">Middleware intercambiable</div>
+          <div class="card-desc">requireRole("Admin") y requireAnyRole(["Admin","Tecnico"]) se aplican indistintamente en la cadena de middleware. Cualquier guardia con firma (req,res,next) es sustituible.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">I — Interface Segregation</div>
+          <div class="card-value">APIs específicas por rol</div>
+          <div class="card-desc">El cliente tiene /mis-ordenes (su vista), mientras admin/recepción usan /ordenes (vista global). Cada rol consume solo los endpoints que necesita — no hay una "mega API" monolítica.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">D — Dependency Inversion</div>
+          <div class="card-value">Pool inyectado por import</div>
+          <div class="card-desc">Los controladores importan { pool } desde db.js (módulo centralizado). No crean conexiones propias. El pool es configurable via .env sin tocar código de negocio.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Patrones Aplicados</div>
+          <div class="card-value">MVC + Middleware + Strategy</div>
+          <div class="card-desc">MVC (routes→controllers→views), Middleware Chain (Express pipeline), Strategy (motor de reglas con prioridad configurable), Repository (pool.query centralizado).</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(168,85,247,.12);color:#a855f7">🧩</div>
+        <div class="info-content">
+          <div class="info-title">Otros patrones identificados</div>
+          <div class="info-desc">
+            <strong>Factory:</strong> signToken() encapsula la creación de JWT.
+            <strong>Guard/Gatekeeper:</strong> authRequired + requireRole como guardias de acceso.
+            <strong>Observer:</strong> ordenes_historial registra automáticamente cada cambio de estado.
+            <strong>Facade:</strong> AdminDashboard como fachada que orquesta 9 secciones y 16+ modals.
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: "mvp-funcional",
+    num: "05",
+    title: "Funcionamiento del Aplicativo como MVP",
+    color: "#06b6d4",
+    status: "ok",
+    content: `
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(6,182,212,.12);color:#06b6d4">🚀</div>
+        <div class="info-content">
+          <div class="info-title">MVP Completo — Flujo end-to-end funcional</div>
+          <div class="info-desc">El sistema permite el ciclo completo: registro de cliente → creación de equipo → orden de servicio → diagnóstico → reparación → pago → factura PDF. Cada rol tiene su dashboard operativo.</div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Rol</th><th>Dashboard</th><th>Funcionalidades MVP</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag tag-pink">Admin</span></td><td>AdminDashboard</td><td>CRUD total (9 secciones), asignación manual/automática, gestión usuarios, reglas, pagos, overview</td></tr>
+          <tr><td><span class="tag tag-blue">Recepción</span></td><td>RecepcionDashboard</td><td>Registro clientes/equipos, crear órdenes, registrar pagos, ver facturas</td></tr>
+          <tr><td><span class="tag tag-green">Técnico</span></td><td>TecnicoDashboard</td><td>Ver órdenes asignadas, actualizar estado/diagnóstico/observaciones</td></tr>
+          <tr><td><span class="tag tag-amber">Cliente</span></td><td>ClienteDashboard</td><td>Ver mis órdenes, pagar online (tarjeta simulada), descargar factura PDF, editar perfil</td></tr>
+        </tbody>
+      </table>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(34,197,94,.12);color:#22c55e">✅</div>
+        <div class="info-content">
+          <div class="info-title">Endpoints funcionales verificados</div>
+          <div class="info-desc">~45 endpoints REST operativos con validación de datos, manejo de errores (400, 401, 403, 404, 409, 500), JOINs complejos (hasta 4 tablas), y respuestas JSON consistentes.</div>
+          <div class="tag-row">
+            <span class="tag tag-green">GET ×18</span>
+            <span class="tag tag-blue">POST ×10</span>
+            <span class="tag tag-amber">PUT ×9</span>
+            <span class="tag tag-purple">PATCH ×1</span>
+            <span class="tag tag-pink">DELETE ×7</span>
+          </div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(245,158,11,.12);color:#f59e0b">⚡</div>
+        <div class="info-content">
+          <div class="info-title">Features diferenciadores del MVP</div>
+          <div class="info-desc">Motor de reglas inteligente para asignación automática, generación de factura PDF nativa (sin librerías), sistema de pagos parciales con saldo en tiempo real, historial de auditoría de estados, y sincronización bidireccional usuario↔entidad.</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: "conventional-commits",
+    num: "06",
+    title: "Conventional Commits",
+    color: "#ec4899",
+    status: "ok",
+    content: `
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(236,72,153,.12);color:#ec4899">📝</div>
+        <div class="info-content">
+          <div class="info-title">Formato Conventional Commits</div>
+          <div class="info-desc">Los commits siguen la especificación Conventional Commits con prefijos semánticos que facilitan la lectura del historial y la generación de changelogs.</div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Prefijo</th><th>Uso</th><th>Ejemplo</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method m-post">feat</span></td><td>Nueva funcionalidad</td><td class="mono">feat(ordenes): add motor de reglas asignacion automatica</td></tr>
+          <tr><td><span class="method m-patch">fix</span></td><td>Corrección de bug</td><td class="mono">fix(auth): validate token expiration on middleware</td></tr>
+          <tr><td><span class="method m-get">docs</span></td><td>Documentación</td><td class="mono">docs(schema): add migrations for grupos and pagos</td></tr>
+          <tr><td><span class="method m-put">refactor</span></td><td>Refactorización</td><td class="mono">refactor(controllers): extract sync helpers for usuario</td></tr>
+          <tr><td><span class="method" style="background:rgba(6,182,212,.12);color:#06b6d4">chore</span></td><td>Mantenimiento</td><td class="mono">chore(deps): update express to v5, add cors</td></tr>
+          <tr><td><span class="method" style="background:rgba(168,85,247,.12);color:#a855f7">style</span></td><td>Estilos/formato</td><td class="mono">style(frontend): refactor App.css card layout</td></tr>
+          <tr><td><span class="method m-del">perf</span></td><td>Rendimiento</td><td class="mono">perf(queries): add LIMIT to list endpoints</td></tr>
+        </tbody>
+      </table>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(59,130,246,.12);color:#60a5fa">📐</div>
+        <div class="info-content">
+          <div class="info-title">Estructura del mensaje</div>
+          <div class="info-desc">Formato: <code style="font-family:var(--mono);background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">tipo(alcance): descripción breve en imperativo</code>. Cada commit es atómico y describe UN cambio. El scope indica el módulo afectado (ordenes, auth, schema, frontend, etc.).</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: "presentacion",
+    num: "07",
+    title: "Presentación del Proyecto (PPTX)",
+    color: "#3b82f6",
+    status: "ok",
+    content: `
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(59,130,246,.12);color:#60a5fa">📊</div>
+        <div class="info-content">
+          <div class="info-title">Presentación generada — 13 diapositivas</div>
+          <div class="info-desc">Archivo RepairEquipment_Consolidado.pptx con diseño profesional Midnight Executive, iconos vectoriales, tablas detalladas y gráficos de métricas.</div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Diapositiva</th><th>Contenido</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">01</td><td>Portada</td><td>Título + stack tecnológico + iconos</td></tr>
+          <tr><td class="mono">02</td><td>Skill Map</td><td>Arquitectura Full Stack en 4 columnas</td></tr>
+          <tr><td class="mono">03</td><td>Base de Datos</td><td>13 tablas con columnas y tipos</td></tr>
+          <tr><td class="mono">04</td><td>Mapa de Rutas API</td><td>9 archivos de rutas con prefijos y roles</td></tr>
+          <tr><td class="mono">05</td><td>Detalle Órdenes</td><td>16 endpoints con métodos HTTP</td></tr>
+          <tr><td class="mono">06</td><td>Controladores</td><td>9 controladores con funciones y descripción</td></tr>
+          <tr><td class="mono">07</td><td>Flujo de Datos</td><td>React → fetch → Router → Middleware → Controller → MySQL → JSON</td></tr>
+          <tr><td class="mono">08</td><td>Auth & RBAC</td><td>Flujo JWT + 4 roles + middleware detalle</td></tr>
+          <tr><td class="mono">09</td><td>Frontend Views</td><td>5 vistas principales con rutas</td></tr>
+          <tr><td class="mono">10</td><td>Patrones Fetch</td><td>GET, POST, state management</td></tr>
+          <tr><td class="mono">11</td><td>Features Avanzadas</td><td>Reglas, factura PDF, pagos, sync</td></tr>
+          <tr><td class="mono">12</td><td>Métricas</td><td>KPIs + gráfico endpoints por módulo</td></tr>
+          <tr><td class="mono">13</td><td>Cierre</td><td>Resumen final del proyecto</td></tr>
+        </tbody>
+      </table>
+    `
+  }
+];
+
+// Build nav
+const navList = document.getElementById('navList');
+const content = document.getElementById('content');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+let visited = new Set();
+
+SECTIONS.forEach(s => {
+  const a = document.createElement('a');
+  a.className = 'nav-item';
+  a.href = '#' + s.id;
+  a.dataset.id = s.id;
+  a.innerHTML = `<span class="nav-num" style="--c:${s.color}">${s.num}</span>${s.title}<span class="check">✓</span>`;
+  navList.appendChild(a);
+});
+
+// Build content
+SECTIONS.forEach(s => {
+  const sec = document.createElement('section');
+  sec.className = 'section';
+  sec.id = s.id;
+  const statusClass = s.status === 'ok' ? 'status-ok' : 'status-partial';
+  const statusLabel = s.status === 'ok' ? '✓ Implementado' : '⚠ Parcial';
+  sec.innerHTML = `
+    <div class="section-header">
+      <div class="section-num" style="background:${s.color}20;color:${s.color}">${s.num}</div>
+      <div class="section-title">${s.title}</div>
+      <div class="section-status ${statusClass}">${statusLabel}</div>
+    </div>
+    <div class="section-body">${s.content}</div>
+  `;
+  content.appendChild(sec);
+});
+
+// Intersection Observer for active nav + progress
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      visited.add(id);
+      document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.id === id);
+        if (visited.has(n.dataset.id)) n.classList.add('done');
+      });
+      const pct = Math.round((visited.size / SECTIONS.length) * 100);
+      progressFill.style.width = pct + '%';
+      progressText.textContent = visited.size + ' / ' + SECTIONS.length + ' puntos revisados';
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+// Close sidebar on mobile nav click
+navList.addEventListener('click', () => {
+  if (window.innerWidth <= 800) document.querySelector('.sidebar').classList.remove('open');
+});
+</script>
+</body>
+</html>
