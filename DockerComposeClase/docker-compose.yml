@@ -1,0 +1,73 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: mysql-db
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_DATABASE: mysql_db
+      MYSQL_USER: usuario
+      MYSQL_PASSWORD: admin123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - databases
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.3
+    container_name: phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - "8181:80"
+    depends_on:
+      - mysql
+    networks:
+      - databases
+  postgres:
+    image: postgres:18
+    container_name: postgres-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: postgres_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - databases
+
+  pgadmin:
+    image: dpage/pgadmin4:9.17
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - databases
+
+
+volumes:
+  mysql_data:
+  postgres_data:
+  pgadmin_data:
+
+
+networks:
+  databases:
+    driver: bridge
