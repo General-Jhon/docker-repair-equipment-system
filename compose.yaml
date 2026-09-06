@@ -1,0 +1,61 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-TallerBD}
+      MYSQL_USER: ${DB_USER:-taller}
+      MYSQL_PASSWORD: ${DB_PASS:-taller_dev_password}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_dev_password}
+      TZ: America/Bogota
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE -e 'SELECT 1 FROM roles LIMIT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DB_HOST: db
+      DB_USER: ${DB_USER:-taller}
+      DB_PASS: ${DB_PASS:-taller_dev_password}
+      DB_NAME: ${DB_NAME:-TallerBD}
+      DB_PORT: 3306
+      JWT_SECRET: ${JWT_SECRET:-cambia_este_secreto_en_produccion}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@taller.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234}
+      ADMIN_NOMBRE: ${ADMIN_NOMBRE:-Administrador}
+      ADMIN_APELLIDO: ${ADMIN_APELLIDO:-Sistema}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
