@@ -1,4 +1,12 @@
-node_modules
-dist
-npm-debug.log
-.git
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+.git/
+.vite/
+*.log
+npm-debug.log*
+Dockerfile*
+README.md

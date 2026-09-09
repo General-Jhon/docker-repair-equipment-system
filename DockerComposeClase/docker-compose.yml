@@ -6,10 +6,10 @@ services:
     restart: unless-stopped
 
     environment:
-      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_ROOT_PASSWORD: ${LAB_MYSQL_ROOT_PASSWORD:-change_me}
       MYSQL_DATABASE: mysql_db
       MYSQL_USER: usuario
-      MYSQL_PASSWORD: admin123
+      MYSQL_PASSWORD: ${LAB_MYSQL_PASSWORD:-change_me}
     ports:
       - "3306:3306"
     volumes:
@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: usuario
-      POSTGRES_PASSWORD: password123
+      POSTGRES_PASSWORD: ${LAB_POSTGRES_PASSWORD:-change_me}
       POSTGRES_DB: postgres_db
     ports:
       - "5432:5432"
@@ -51,7 +51,7 @@ services:
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_PASSWORD: ${LAB_PGADMIN_PASSWORD:-change_me}
     ports:
       - "8081:80"
     depends_on:
