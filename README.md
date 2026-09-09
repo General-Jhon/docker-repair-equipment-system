@@ -1,163 +1,144 @@
 # Docker Repair Equipment System
 
-Sistema web para gestionar clientes, equipos, técnicos, órdenes de reparación,
-pagos y usuarios. El objetivo principal de este repositorio es demostrar cómo
-una aplicación full stack se divide, construye y ejecuta mediante contenedores
-Docker.
+Sistema web para gestionar clientes, equipos, técnicos, órdenes, pagos y
+usuarios. Esta versión se centra en demostrar la contenerización, seguridad,
+topología y despliegue reproducible de una aplicación full stack.
 
-## Tecnologías
-
-| Capa | Tecnología | Función |
-|---|---|---|
-| Frontend | React + Vite | Interfaz web para administradores, clientes, técnicos y recepción |
-| Servidor web | Nginx | Publica el frontend y redirige las peticiones `/api` |
-| Backend | Node.js + Express | API REST, autenticación y reglas del negocio |
-| Base de datos | MySQL 8.4 | Almacenamiento persistente |
-| Orquestación | Docker Compose | Construye, conecta y controla los tres servicios |
-
-## Arquitectura Docker
+## Arquitectura
 
 ```mermaid
 flowchart LR
-    U[Usuario<br/>Navegador] -->|localhost:8080| N[Nginx<br/>frontend]
-    N -->|Archivos estáticos| R[React]
-    N -->|/api| B[Node.js + Express<br/>backend:3001]
-    B -->|db:3306| M[(MySQL 8.4)]
-    M --- V[(Volumen<br/>mysql_data)]
-    S[docs/schema.sql] -->|Primer arranque| M
+    U[Navegador] -->|localhost:8080| F[Frontend<br/>React + Nginx]
+    F -->|/api · frontend_net| B[Backend<br/>Node.js + Express]
+    B -->|db:3306 · backend_net| D[(MySQL 8.4)]
+    D --- V[(mysql_data)]
+    S[docs/schema.sql] -->|primer arranque| D
 ```
 
-Docker Compose crea una red privada automáticamente. Dentro de ella, cada
-contenedor encuentra a los demás por el nombre del servicio:
+| Servicio | Imagen | Usuario final | Redes | Puerto publicado |
+|---|---|---|---|---|
+| frontend | Construida desde `frontend/Dockerfile` | `nginx` | `frontend_net` | `8080:8080` |
+| backend | Construida desde `backend/Dockerfile` | `node` | Ambas | Ninguno |
+| db | `mysql:8.4` | Gestionado por la imagen oficial | `backend_net` | Ninguno |
 
-- El frontend contacta al backend mediante `http://backend:3001`.
-- El backend contacta a MySQL mediante `db:3306`.
-- Solo Nginx publica un puerto hacia el equipo anfitrión: `8080`.
-- MySQL y la API permanecen dentro de la red de Docker.
+Solo Nginx es accesible desde el host. Backend conecta las dos capas y MySQL
+permanece en una red marcada como interna.
 
-Esta separación reduce puertos expuestos y evita utilizar direcciones IP
-manuales, ya que Docker proporciona DNS interno.
+Documentación ampliada:
 
-## Estructura relacionada con Docker
+- [Arquitectura y decisiones](docs/architecture.md)
+- [Postura de seguridad](docs/security.md)
+- [Backend](backend/README.md)
+- [Frontend](frontend/README.md)
+
+## Estructura Docker
 
 ```text
 .
-├── compose.yaml
+├── docker-compose.yml
 ├── .env.example
-├── docs/
-│   └── schema.sql
 ├── backend/
+│   ├── src/
 │   ├── Dockerfile
-│   └── .dockerignore
-└── frontend/
-    ├── Dockerfile
-    ├── .dockerignore
-    └── nginx.conf
+│   ├── .dockerignore
+│   ├── .env.example
+│   └── README.md
+├── frontend/
+│   ├── src/
+│   ├── Dockerfile
+│   ├── .dockerignore
+│   ├── .env.example
+│   ├── nginx.conf
+│   └── README.md
+├── docs/
+│   ├── architecture.md
+│   ├── security.md
+│   └── schema.sql
+└── scripts/
+    └── verify-docker.sh
 ```
 
-## Cómo se creó la solución Docker
+## Cómo se construyeron las imágenes
 
-### 1. Contenedor del backend
+### Backend
 
-El archivo `backend/Dockerfile` parte de `node:22-alpine`.
+`backend/Dockerfile` tiene dos etapas:
 
-```dockerfile
-FROM node:22-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev
-COPY src ./src
-COPY scripts ./scripts
-ENV NODE_ENV=production
-EXPOSE 3001
-CMD ["sh", "-c", "node scripts/seedAdmin.js && exec node src/server.js"]
+1. **dependencies:** instala solo dependencias de producción con
+   `npm ci --omit=dev`.
+2. **runtime:** recibe las dependencias y el código usando
+   `COPY --chown=node:node`.
+
+La etapa final declara `USER node`. Separar la instalación de la ejecución
+mejora la caché de capas y asegura que las herramientas o archivos temporales
+de construcción no se mezclen con el código final.
+
+Se eligió `node:22-alpine` por su tamaño reducido y porque la aplicación no
+requiere bibliotecas nativas adicionales.
+
+### Frontend
+
+`frontend/Dockerfile` aplica una construcción multietapa más marcada:
+
+1. Node.js y Vite compilan React y generan `dist`.
+2. Nginx recibe únicamente los archivos estáticos de `dist`.
+
+Node, npm, el código fuente y las dependencias de desarrollo no quedan en la
+imagen final. Nginx escucha en 8080 para no necesitar privilegios y declara
+`USER nginx`.
+
+### Contextos de construcción
+
+Cada componente tiene su propio `.dockerignore`. Se excluyen:
+
+- `node_modules/`
+- `dist/` y `coverage/`
+- `.env` y sus variantes
+- `.git/` y `.vite/`
+- registros y artefactos locales
+
+`.env.example` se conserva como documentación, pero los archivos reales con
+secretos nunca entran a las imágenes.
+
+## Nginx como proxy inverso
+
+El navegador utiliza rutas relativas como `/api/auth/login`. Nginx decide
+cómo atenderlas:
+
+- `/api/*` se redirige a `http://backend:3001`.
+- El resto sirve el frontend compilado.
+- `try_files ... /index.html` permite las rutas de la SPA.
+
+Así, el backend no se publica y el navegador no depende de IP internas.
+
+## Docker Compose
+
+[docker-compose.yml](docker-compose.yml) declara el sistema completo:
+
+- Construye frontend y backend.
+- Descarga la imagen oficial de MySQL.
+- Crea las redes `frontend_net` y `backend_net`.
+- Crea el volumen `mysql_data`.
+- Inyecta las variables en tiempo de ejecución.
+- Aplica `no-new-privileges:true`.
+- Controla el orden mediante healthchecks.
+
+### Garantías de arranque
+
+```text
+MySQL carga docs/schema.sql
+          ↓ healthcheck consulta la tabla roles
+Backend crea el administrador e inicia Express
+          ↓ healthcheck consulta /api/health y MySQL
+Frontend inicia Nginx
+          ↓ healthcheck solicita el puerto 8080
+Sistema disponible
 ```
 
-¿Por qué se configuró así?
+`depends_on` utiliza `condition: service_healthy`; no basta con que el
+contenedor exista, el servicio debe responder.
 
-- `node:22-alpine` ofrece Node.js en una imagen más pequeña que la imagen
-  completa.
-- `WORKDIR /app` establece una ruta de trabajo clara dentro del contenedor.
-- Los archivos `package*.json` se copian antes que el código para reutilizar la
-  caché de Docker cuando las dependencias no cambian.
-- `npm ci --omit=dev` instala exactamente lo indicado en
-  `package-lock.json`, sin dependencias exclusivas de desarrollo.
-- `EXPOSE 3001` documenta el puerto usado por Express. No lo publica en el
-  computador; la API continúa siendo interna.
-- Antes de iniciar la API, `seedAdmin.js` crea el administrador si todavía no
-  existe. El script es idempotente, por lo que reiniciar el contenedor no
-  duplica el usuario.
-- `exec node src/server.js` convierte a Node en el proceso principal y permite
-  que reciba correctamente las señales de parada de Docker.
-
-El archivo `backend/.dockerignore` evita enviar `node_modules`, registros,
-Git y el archivo local `.env` al contexto de construcción. Esto mejora la
-velocidad y evita copiar secretos dentro de la imagen.
-
-### 2. Contenedor del frontend
-
-El archivo `frontend/Dockerfile` utiliza una construcción multietapa.
-
-#### Etapa de compilación
-
-```dockerfile
-FROM node:22-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-```
-
-Node y Vite son necesarios para transformar React en archivos HTML, CSS y
-JavaScript optimizados dentro de `dist`.
-
-#### Etapa de ejecución
-
-```dockerfile
-FROM nginx:1.27-alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-```
-
-La imagen final solo contiene Nginx y los archivos compilados. Node, el código
-fuente y las dependencias de construcción no pasan a producción. Esto produce
-una imagen más pequeña y con menos componentes innecesarios.
-
-El archivo `frontend/.dockerignore` excluye `node_modules`, `dist`,
-registros y Git del contexto enviado a Docker.
-
-### 3. Nginx como servidor y proxy inverso
-
-La configuración `frontend/nginx.conf` cumple dos responsabilidades:
-
-1. Servir los archivos estáticos generados por Vite.
-2. Redirigir cualquier ruta `/api/` al servicio `backend:3001`.
-
-```nginx
-location /api/ {
-  proxy_pass http://backend:3001;
-}
-
-location / {
-  try_files $uri $uri/ /index.html;
-}
-```
-
-El proxy permite que el navegador use rutas como `/api/auth/login` sin
-conocer la dirección interna del backend y evita problemas de direcciones
-`localhost` distintas entre contenedores.
-
-`try_files ... /index.html` permite actualizar o abrir directamente una ruta
-del frontend sin obtener un error 404, algo necesario en aplicaciones SPA.
-
-### 4. Base de datos MySQL
-
-MySQL usa la imagen oficial `mysql:8.4`. No necesita un Dockerfile propio
-porque se puede configurar mediante variables, volúmenes y el script SQL.
-
-Se montan dos volúmenes con propósitos diferentes:
+## Persistencia e inicialización
 
 ```yaml
 volumes:
@@ -165,124 +146,53 @@ volumes:
   - ./docs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
 ```
 
-- `mysql_data` es un volumen nombrado que mantiene los datos aunque el
-  contenedor se elimine o se vuelva a crear.
-- `schema.sql` es un montaje de solo lectura. La imagen oficial de MySQL
-  ejecuta los archivos de `docker-entrypoint-initdb.d` únicamente cuando el
-  volumen de datos está vacío.
+- `mysql_data` mantiene la información al recrear contenedores.
+- `schema.sql` crea tablas y catálogos cuando el volumen está vacío.
+- El montaje `:ro` impide que MySQL modifique el archivo del host.
+- Para cambios posteriores deben emplearse migraciones.
 
-Por esta razón, cambiar `schema.sql` después del primer arranque no modifica
-automáticamente una base existente; para cambios posteriores deben utilizarse
-migraciones o recrear el volumen durante una demostración.
-
-### 5. Orquestación con Docker Compose
-
-`compose.yaml` declara tres servicios:
-
-| Servicio | Origen | Puerto | Dependencia |
-|---|---|---|---|
-| `db` | `mysql:8.4` | Solo interno, 3306 | Ninguna |
-| `backend` | `./backend/Dockerfile` | Solo interno, 3001 | MySQL saludable |
-| `frontend` | `./frontend/Dockerfile` | `8080:80` | Backend saludable |
-
-La expresión `8080:80` significa que el puerto 8080 del computador se conecta
-al puerto 80 de Nginx dentro del contenedor.
-
-Se utiliza `restart: unless-stopped` para reiniciar un servicio si falla,
-excepto cuando el usuario lo detiene explícitamente.
-
-### 6. Healthchecks y orden de arranque
-
-`depends_on` por sí solo no garantiza que una aplicación esté lista; solo
-indica que su proceso fue iniciado. Por eso se agregaron comprobaciones reales:
-
-- MySQL ejecuta una consulta sobre la tabla `roles`. Así se confirma que el
-  motor responde y que el esquema terminó de cargarse.
-- El backend consulta `/api/health`, que también ejecuta `SELECT 1` en
-  MySQL.
-- El frontend solicita la página local de Nginx.
-
-El arranque resultante es:
-
-```text
-MySQL inicia y carga schema.sql
-          ↓
-MySQL queda healthy
-          ↓
-Backend crea el administrador e inicia Express
-          ↓
-Backend queda healthy
-          ↓
-Frontend inicia Nginx y publica el sistema
-```
-
-Esto evita que el backend falle por conectarse demasiado pronto a MySQL y que
-el frontend se habilite cuando la API todavía no responde.
-
-### 7. Variables de entorno
-
-`.env.example` documenta las variables sin guardar credenciales reales en
-Git. Docker Compose admite valores personalizados y valores predeterminados:
-
-```yaml
-DB_NAME: ${DB_NAME:-TallerBD}
-```
-
-La sintaxis significa: usar `DB_NAME` si está definida; de lo contrario usar
-`TallerBD`.
-
-Antes del primer arranque se crea una copia local:
-
-```bash
-cp .env.example .env
-```
-
-El archivo `.env` está ignorado por Git. En un despliegue real deben cambiarse
-`DB_PASS`, `DB_ROOT_PASSWORD`, `JWT_SECRET` y `ADMIN_PASSWORD`.
-
-## Construcción y ejecución
+## Ejecutar desde cero
 
 Requisitos:
 
 - Docker Engine
 - Docker Compose v2
 
-Desde la raíz del repositorio:
-
 ```bash
+git clone https://github.com/General-Jhon/docker-repair-equipment-system.git
+cd docker-repair-equipment-system
 cp .env.example .env
 docker compose up --build -d
 ```
 
-La opción `--build` reconstruye las imágenes locales y `-d` ejecuta los
-contenedores en segundo plano.
+Abrir <http://localhost:8080>.
 
-Abrir:
-
-<http://localhost:8080>
-
-Credenciales de demostración predeterminadas:
+Credenciales de demostración:
 
 - Correo: `admin@taller.local`
 - Contraseña: `Admin1234`
 
-## Verificación
+Las contraseñas y `JWT_SECRET` deben cambiarse antes de un despliegue
+compartido.
 
-Consultar el estado:
+## Verificación de la entrega
 
-```bash
-docker compose ps
-```
-
-Los tres servicios deben aparecer como `healthy`.
-
-Probar el frontend:
+Ejecutar:
 
 ```bash
-curl http://localhost:8080/
+./scripts/verify-docker.sh
 ```
 
-Probar el recorrido Nginx → backend → MySQL:
+El script comprueba automáticamente:
+
+- Frontend accesible.
+- Recorrido Nginx → backend → MySQL.
+- Backend y MySQL sin puertos publicados.
+- Backend ejecutado como `node`.
+- Frontend ejecutado como `nginx`.
+- Segmentación correcta de las redes.
+
+Prueba manual del recorrido completo:
 
 ```bash
 curl http://localhost:8080/api/health
@@ -294,84 +204,82 @@ Respuesta esperada:
 {"ok":true,"db":{"ok":1}}
 ```
 
-Consultar registros:
+## Resultados de construcción
+
+Mediciones obtenidas localmente el 8 de septiembre de 2026:
+
+| Imagen final | Tamaño aproximado |
+|---|---:|
+| Backend Node.js | 163 MB |
+| Frontend Nginx | 47 MB |
+
+El frontend final no contiene la etapa Node/Vite. En el backend se instalan
+solo dependencias de producción. Los valores pueden variar ligeramente según
+la arquitectura y la versión exacta de las imágenes base.
+
+Comando para repetir la medición:
 
 ```bash
-docker compose logs -f
-docker compose logs -f backend
+docker image inspect \
+  docker-repair-equipment-system-backend \
+  docker-repair-equipment-system-frontend \
+  --format '{{.RepoTags}} {{.Size}} bytes'
 ```
 
 ## Comandos útiles
 
 | Comando | Función |
 |---|---|
-| `docker compose up --build -d` | Construir e iniciar el proyecto |
-| `docker compose ps` | Ver el estado de los servicios |
-| `docker compose logs -f` | Seguir los registros |
-| `docker compose restart backend` | Reiniciar solo la API |
-| `docker compose down` | Detener y eliminar contenedores y red |
-| `docker compose down -v` | Eliminar también los datos de MySQL |
-| `docker compose build --no-cache` | Reconstruir sin usar caché |
+| `docker compose up --build -d` | Construir e iniciar |
+| `docker compose ps` | Mostrar estado y healthchecks |
+| `docker compose logs -f` | Seguir todos los registros |
+| `docker compose logs -f backend` | Ver solo la API |
+| `docker compose restart backend` | Reiniciar la API |
+| `docker compose down` | Eliminar contenedores y redes |
+| `docker compose down -v` | Eliminar también la base de datos |
+| `docker compose build --no-cache` | Reconstruir sin caché |
 
-> `docker compose down -v` borra la base de datos persistente. Debe utilizarse
-> únicamente cuando se quiera reiniciar la demostración desde cero.
+> `docker compose down -v` borra definitivamente los datos del volumen local.
 
 ## Flujo de una solicitud
 
-Cuando un usuario inicia sesión ocurre lo siguiente:
-
 1. El navegador envía `POST /api/auth/login` al puerto 8080.
-2. Nginx recibe la solicitud y, por comenzar con `/api`, la envía a
-   `backend:3001`.
-3. Express valida los datos consultando MySQL en `db:3306`.
-4. MySQL responde al backend.
-5. El backend devuelve la respuesta a Nginx.
-6. Nginx entrega la respuesta al navegador.
+2. Nginx recibe la solicitud.
+3. Por comenzar con `/api`, Nginx la envía a `backend:3001`.
+4. Express consulta MySQL mediante `db:3306`.
+5. La respuesta vuelve por Express y Nginx hasta el navegador.
 
-La base de datos y el backend nunca necesitan publicarse directamente en el
-equipo anfitrión.
+Los nombres `backend` y `db` son resueltos por el DNS interno de Docker; no
+se utilizan direcciones IP fijas.
 
-## Ideas clave para la presentación
+## Alcance y camino a producción
 
-- **Imagen:** plantilla inmutable usada para crear contenedores.
-- **Contenedor:** instancia en ejecución de una imagen.
-- **Dockerfile:** instrucciones para construir una imagen.
-- **Docker Compose:** definición declarativa de varios servicios relacionados.
-- **Red:** comunicación privada usando nombres de servicio como DNS.
-- **Volumen:** almacenamiento que sobrevive al ciclo de vida del contenedor.
-- **Proxy inverso:** punto de entrada que recibe y dirige solicitudes.
-- **Healthcheck:** prueba automática del estado real de un servicio.
-- **Construcción multietapa:** separación entre herramientas de compilación y
-  componentes necesarios en producción.
-- **Caché de capas:** reutilización de pasos que no cambiaron para acelerar
-  futuras construcciones.
+Esta versión cubre la contenerización del frontend, backend y base de datos. Por
+decisión de alcance, no implementa el almacenamiento compatible con S3
+mencionado en el documento de entrega.
 
-## Evolución del trabajo con Docker
+Para producción todavía se requiere:
 
-El historial Git conserva el proceso por etapas:
+- HTTPS y dominio.
+- Gestor externo de secretos.
+- CORS restringido y rate limiting.
+- Escaneo continuo de imágenes y dependencias.
+- Copias de seguridad y migraciones automatizadas.
+- Observabilidad y registros centralizados.
+- Registro privado de imágenes.
+- Almacenamiento externo de objetos si el producto incorpora archivos.
 
-1. Creación del esquema de base de datos.
-2. Implementación del backend.
-3. Implementación del frontend.
-4. Incorporación de documentación y evidencias.
-5. Laboratorio inicial de bases de datos con Docker Compose.
-6. Creación de las imágenes del frontend y backend.
-7. Orquestación completa con MySQL.
-8. Exclusión de la caché local de Vite.
-9. Documentación técnica de la solución Docker.
+## Guion breve para la sustentación
 
-El laboratorio independiente se conserva en
-`DockerComposeClase/docker-compose.yml`; la solución final del sistema utiliza
-`compose.yaml` en la raíz.
-
-## Seguridad
-
-La configuración incluida está pensada para desarrollo y demostración. Para
-producción se recomienda:
-
-- Utilizar secretos fuertes y no versionarlos.
-- Publicar el servicio mediante HTTPS.
-- Restringir CORS.
-- Ejecutar los procesos con usuarios sin privilegios.
-- Fijar versiones y revisar vulnerabilidades de las dependencias.
-- Implementar copias de seguridad y migraciones de la base de datos.
+1. Problema que resuelve el sistema.
+2. Arquitectura de tres servicios.
+3. Dockerfile multietapa del backend.
+4. Dockerfile multietapa del frontend.
+5. Usuario no root y contextos sin secretos.
+6. Nginx y proxy inverso.
+7. Redes segmentadas y superficie expuesta.
+8. Volumen y esquema automático.
+9. Healthchecks y orden de arranque.
+10. Demostración con `docker compose up` y el script de verificación.
+11. Tamaño de imágenes.
+12. Límites actuales y camino a producción.

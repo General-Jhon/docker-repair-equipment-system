@@ -1,16 +1,37 @@
-# React + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz React de Repair Equipment, compilada con Vite y publicada mediante
+Nginx.
 
-Currently, two official plugins are available:
+## Responsabilidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Presentar los portales de administración, cliente, técnico y recepción.
+- Consumir la API usando rutas relativas bajo `/api`.
+- Entregar una SPA con fallback hacia `index.html`.
+- Actuar como único punto de entrada publicado del sistema.
 
-## React Compiler
+## Imagen Docker
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Se utiliza construcción multietapa:
 
-## Expanding the ESLint configuration
+1. `build`: Node.js instala dependencias y genera `dist`.
+2. Etapa final: Nginx recibe únicamente los archivos estáticos compilados.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Nginx escucha en el puerto no privilegiado 8080 y la imagen declara
+`USER nginx`. El compilador, el código fuente y las dependencias de Node no
+forman parte de la imagen final.
+
+## Proxy inverso
+
+Las solicitudes `/api` se envían a `http://backend:3001`. El navegador nunca
+necesita conocer ni acceder directamente al backend.
+
+## Desarrollo local
+
+```bash
+npm ci
+npm run dev
+```
+
+Vite redirige `/api` a la API local mediante la configuración de
+`vite.config.js`.
